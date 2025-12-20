@@ -189,6 +189,10 @@
             const [confirmData, setConfirmData] = useState(null);
             const [selectedDailyDetail, setSelectedDailyDetail] = useState(null);
 
+            // Export Modal State
+            const [exportModalOpen, setExportModalOpen] = useState(false);
+            const [exportSettings, setExportSettings] = useState({ data: [], filename: '', columns: [], selected: [] });
+
             // Filters
             const [searchQuery, setSearchQuery] = useState('');
             const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
@@ -595,6 +599,74 @@
                 document.body.removeChild(link);
             };
 
+            // --- Export Config Handlers ---
+            const handleOpenExport = (type, data) => {
+                const showCostProfit = currentUser?.role === 'admin';
+                let cols = [];
+                let filename = '';
+
+                if (type === 'daily') {
+                    filename = 'daily_summary.csv';
+                    cols = [
+                        { id: 'date', header: 'วันที่', accessor: d => d.date },
+                        { id: 'count', header: 'จำนวนบิล', accessor: d => d.count },
+                        { id: 'sales', header: 'ยอดขายรวม', accessor: d => d.sales },
+                    ];
+                    if (showCostProfit) {
+                        cols.push({ id: 'cost', header: 'ทุนรวม', accessor: d => d.cost });
+                        cols.push({ id: 'profit', header: 'กำไรสุทธิ', accessor: d => d.profit });
+                    }
+                } else if (type === 'monthly') {
+                    filename = 'monthly_summary.csv';
+                    cols = [
+                        { id: 'month', header: 'เดือน', accessor: d => d.month },
+                        { id: 'count', header: 'จำนวนบิล', accessor: d => d.count },
+                        { id: 'sales', header: 'ยอดขายรวม', accessor: d => d.sales },
+                    ];
+                    if (showCostProfit) {
+                        cols.push({ id: 'cost', header: 'ทุนรวม', accessor: d => d.cost });
+                        cols.push({ id: 'profit', header: 'กำไรสุทธิ', accessor: d => d.profit });
+                    }
+                } else if (type === 'item') {
+                    filename = 'item_summary.csv';
+                    cols = [
+                        { id: 'name', header: 'รายการสินค้า', accessor: d => d.name },
+                        { id: 'qty', header: 'จำนวนที่ขาย', accessor: d => d.qty },
+                        { id: 'sales', header: 'ยอดขายรวม', accessor: d => d.sales },
+                    ];
+                    if (showCostProfit) {
+                        cols.push({ id: 'cost', header: 'ทุนรวม', accessor: d => d.cost });
+                        cols.push({ id: 'profit', header: 'กำไรสุทธิ', accessor: d => d.profit });
+                    }
+                }
+
+                setExportSettings({
+                    data,
+                    filename,
+                    columns: cols,
+                    selected: cols.map(c => c.id) // Default select all
+                });
+                setExportModalOpen(true);
+            };
+
+            const toggleExportColumn = (colId) => {
+                setExportSettings(prev => {
+                    const newSelected = prev.selected.includes(colId) 
+                        ? prev.selected.filter(id => id !== colId)
+                        : [...prev.selected, colId];
+                    return { ...prev, selected: newSelected };
+                });
+            };
+
+            const confirmExport = () => {
+                const finalColumns = exportSettings.columns.filter(c => exportSettings.selected.includes(c.id));
+                if (finalColumns.length === 0) return showNotif('กรุณาเลือกอย่างน้อย 1 คอลัมน์', 'error');
+                
+                exportToCSV(exportSettings.data, exportSettings.filename, finalColumns);
+                setExportModalOpen(false);
+                showNotif('Export CSV สำเร็จ');
+            };
+
             // --- Condition Check for Login ---
             if (!currentUser) return <LoginScreen onLogin={handleLogin} />;
 
@@ -760,18 +832,7 @@
                         <div className="bg-white rounded-xl shadow border overflow-hidden">
                             <div className="p-4 border-b flex justify-between items-center bg-slate-50">
                                 <h3 className="font-bold text-slate-700">สรุปยอดขายรายวัน (เดือนนี้)</h3>
-                                <Button onClick={() => {
-                                    const cols = [
-                                        { header: 'วันที่', accessor: d => d.date },
-                                        { header: 'จำนวนบิล', accessor: d => d.count },
-                                        { header: 'ยอดขายรวม', accessor: d => d.sales },
-                                    ];
-                                    if (showCostProfit) {
-                                        cols.push({ header: 'ทุนรวม', accessor: d => d.cost });
-                                        cols.push({ header: 'กำไรสุทธิ', accessor: d => d.profit });
-                                    }
-                                    exportToCSV(dailyList, 'daily_summary.csv', cols);
-                                }} variant="success" className="text-xs"><Icons.Sheet className="w-4 h-4"/> Export CSV</Button>
+                                <Button onClick={() => handleOpenExport('daily', dailyList)} variant="success" className="text-xs"><Icons.Sheet className="w-4 h-4"/> Export CSV</Button>
                             </div>
                             <table className="w-full text-left text-sm">
                                 <thead className="bg-slate-50 border-b">
@@ -808,18 +869,7 @@
                         <div className="bg-white rounded-xl shadow border overflow-hidden">
                             <div className="p-4 border-b flex justify-between items-center bg-slate-50">
                                 <h3 className="font-bold text-slate-700">สรุปยอดขายรายเดือน (ปีนี้)</h3>
-                                <Button onClick={() => {
-                                    const cols = [
-                                        { header: 'เดือน', accessor: d => d.month },
-                                        { header: 'จำนวนบิล', accessor: d => d.count },
-                                        { header: 'ยอดขายรวม', accessor: d => d.sales },
-                                    ];
-                                    if (showCostProfit) {
-                                        cols.push({ header: 'ทุนรวม', accessor: d => d.cost });
-                                        cols.push({ header: 'กำไรสุทธิ', accessor: d => d.profit });
-                                    }
-                                    exportToCSV(monthlyList, 'monthly_summary.csv', cols);
-                                }} variant="success" className="text-xs"><Icons.Sheet className="w-4 h-4"/> Export CSV</Button>
+                                <Button onClick={() => handleOpenExport('monthly', monthlyList)} variant="success" className="text-xs"><Icons.Sheet className="w-4 h-4"/> Export CSV</Button>
                             </div>
                             <table className="w-full text-left text-sm">
                                 <thead className="bg-slate-50 border-b">
@@ -860,18 +910,7 @@
                                             </button>
                                         ))}
                                     </div>
-                                    <Button onClick={() => {
-                                        const cols = [
-                                            { header: 'รายการสินค้า', accessor: d => d.name },
-                                            { header: 'จำนวนที่ขาย', accessor: d => d.qty },
-                                            { header: 'ยอดขายรวม', accessor: d => d.sales },
-                                        ];
-                                        if (showCostProfit) {
-                                            cols.push({ header: 'ทุนรวม', accessor: d => d.cost });
-                                            cols.push({ header: 'กำไรสุทธิ', accessor: d => d.profit });
-                                        }
-                                        exportToCSV(itemSummaryList, 'item_summary.csv', cols);
-                                    }} variant="success" className="text-xs"><Icons.Sheet className="w-4 h-4"/> Export CSV</Button>
+                                    <Button onClick={() => handleOpenExport('item', itemSummaryList)} variant="success" className="text-xs"><Icons.Sheet className="w-4 h-4"/> Export CSV</Button>
                                 </div>
                             </div>
                             <table className="w-full text-left text-sm">
@@ -1023,6 +1062,32 @@
                                             ))}
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                        </Modal>
+                    )}
+
+                    {/* Export Config Modal */}
+                    {exportModalOpen && (
+                        <Modal title="ตั้งค่าการ Export CSV" onClose={() => setExportModalOpen(false)}>
+                            <div className="space-y-4">
+                                <div className="text-sm text-slate-500 mb-2">เลือกคอลัมน์ที่ต้องการแสดงในไฟล์ CSV:</div>
+                                <div className="space-y-2">
+                                    {exportSettings.columns.map(col => (
+                                        <label key={col.id} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                checked={exportSettings.selected.includes(col.id)} 
+                                                onChange={() => toggleExportColumn(col.id)} 
+                                            />
+                                            <span className="font-medium text-slate-700">{col.header}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2 pt-4">
+                                    <Button variant="secondary" className="flex-1" onClick={() => setExportModalOpen(false)}>ยกเลิก</Button>
+                                    <Button variant="success" className="flex-1" onClick={confirmExport}>ดาวน์โหลด CSV</Button>
                                 </div>
                             </div>
                         </Modal>
