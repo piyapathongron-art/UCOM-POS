@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ucom Smart Shop POS</title>
+    <title>US POS - Mobile Shop System (Final Stable)</title>
     
-    <!-- Tailwind CSS -->
+    <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & ReactDOM -->
+    <!-- 2. React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel (สำหรับการแปลง JSX ใน Browser) -->
+    <!-- 3. Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Font & Icons -->
+    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
@@ -25,42 +25,17 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 h-screen overflow-hidden">
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- Icon Components (Inline SVG เพื่อความชัวร์ในการแสดงผล) ---
-        const Icon = ({ children, className }) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>;
-        const Smartphone = () => <Icon><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></Icon>;
-        const CreditCard = () => <Icon><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></Icon>;
-        const Wrench = () => <Icon><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></Icon>;
-        const Wifi = () => <Icon><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></Icon>;
-        const Package = () => <Icon><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-9"/></Icon>;
-        const BarChart3 = () => <Icon><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></Icon>;
-        const Search = () => <Icon><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></Icon>;
-        const ShoppingCart = () => <Icon><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></Icon>;
-        const Plus = () => <Icon><path d="M5 12h14"/><path d="M12 5v14"/></Icon>;
-        const Trash2 = () => <Icon><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></Icon>;
-        const Edit = () => <Icon><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></Icon>;
-        const XCircle = () => <Icon><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></Icon>;
-        const User = () => <Icon><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>;
-        const ArrowRightLeft = () => <Icon><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></Icon>;
-        const Settings = () => <Icon><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>;
-        const Check = () => <Icon><polyline points="20 6 9 17 4 12"/></Icon>;
-        const Filter = () => <Icon><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></Icon>;
-        const ScanBarcode = () => <Icon><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></Icon>;
-        const Menu = () => <Icon><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></Icon>;
-        const Download = () => <Icon><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></Icon>;
-        const Upload = () => <Icon><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></Icon>;
-        const AlertCircle = () => <Icon><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></Icon>;
-        const FileText = () => <Icon><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></Icon>;
-        const Printer = () => <Icon><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></Icon>;
-
         const { useState, useEffect, useRef, useMemo } = React;
 
-        // --- Mock Data ---
+        // --- 1. Initial Data ---
         const INITIAL_STOCK = [
             { id: 1, productId: 'P-0001', group: 'อุปกรณ์เสริม', name: 'Film U&i', qty: 2, cost: 19, price: 100 },
             { id: 2, productId: 'P-0002', group: 'อุปกรณ์เสริม', name: 'Film Focus', qty: 0, cost: 120, price: 350 },
@@ -69,431 +44,514 @@
             { id: 7, productId: 'SIM001', group: 'ซิมการ์ด', name: 'Sim OTC', qty: 1, cost: 29, price: 50 },
         ];
         const INITIAL_CATEGORIES = ['ทั่วไป', 'โทรศัพท์', 'อุปกรณ์เสริม', 'ซิมการ์ด', 'บริการ'];
+        const INITIAL_USERS = [
+            { id: 1, name: 'เจ้าของร้าน', username: 'admin', password: '1234', role: 'admin', permissions: ['all'] },
+            { id: 2, name: 'พนักงานขาย', username: 'staff', password: '1234', role: 'staff', permissions: ['pos', 'services', 'report'] }
+        ];
 
-        function App() {
-            // --- States ---
+        const PERMISSION_LABELS = {
+            'pos': 'ขายหน้าร้าน', 'services': 'บริการ', 'installments': 'ฝากผ่อน',
+            'stock': 'จัดการสต็อก', 'report': 'รายงาน', 'users': 'จัดการผู้ใช้'
+        };
+
+        const parseNum = (val) => {
+            if (!val || val === '') return 0;
+            const num = parseFloat(val);
+            return isNaN(num) ? 0 : num;
+        };
+
+        // --- 2. Icons ---
+        const Icon = ({ children, className }) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>;
+        const Icons = {
+            Smartphone: () => <Icon><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></Icon>,
+            CreditCard: () => <Icon><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></Icon>,
+            Wrench: () => <Icon><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></Icon>,
+            Wifi: () => <Icon><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></Icon>,
+            Package: () => <Icon><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-9"/></Icon>,
+            BarChart3: () => <Icon><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></Icon>,
+            Search: () => <Icon><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></Icon>,
+            ShoppingCart: () => <Icon><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></Icon>,
+            Plus: () => <Icon><path d="M5 12h14"/><path d="M12 5v14"/></Icon>,
+            Trash2: () => <Icon><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></Icon>,
+            Edit: () => <Icon><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></Icon>,
+            User: () => <Icon><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>,
+            ArrowRightLeft: () => <Icon><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></Icon>,
+            Check: () => <Icon><polyline points="20 6 9 17 4 12"/></Icon>,
+            Filter: () => <Icon><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></Icon>,
+            ScanBarcode: () => <Icon><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></Icon>,
+            Menu: () => <Icon><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></Icon>,
+            Download: () => <Icon><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></Icon>,
+            Upload: () => <Icon><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></Icon>,
+            AlertCircle: () => <Icon><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></Icon>,
+            FileText: () => <Icon><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></Icon>,
+            Printer: () => <Icon><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></Icon>,
+            Database: () => <Icon><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></Icon>,
+            X: () => <Icon><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Icon>,
+            Users: () => <Icon><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></Icon>,
+            LogOut: () => <Icon><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></Icon>,
+            Shield: () => <Icon><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></Icon>,
+            Settings: () => <Icon><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>
+        };
+
+        // --- 3. UI Components ---
+        const Card = ({ children, className = "" }) => <div className={`bg-white rounded-xl shadow-sm border border-slate-100 ${className}`}>{children}</div>;
+        const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, title = "", type = "button" }) => {
+            const variants = {
+                primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md",
+                secondary: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+                danger: "bg-red-50 text-red-600 hover:bg-red-100",
+                warning: "bg-orange-500 text-white hover:bg-orange-600 shadow-orange-200"
+            };
+            return (
+                <button type={type} onClick={onClick} disabled={disabled} title={title} className={`px-4 py-2 rounded-lg font-medium transition-all active:scale-95 flex items-center justify-center gap-2 ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}>{children}</button>
+            );
+        };
+        const Modal = ({ title, onClose, children }) => (
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 fade-in">
+                <Card className="w-full max-w-md bg-white overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+                    <div className="p-4 border-b bg-slate-50 font-bold text-lg flex justify-between items-center text-slate-800">
+                        <span>{title}</span>
+                        <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-full text-slate-500"><Icons.X /></button>
+                    </div>
+                    <div className="p-6 overflow-y-auto">{children}</div>
+                </Card>
+            </div>
+        );
+        const Notification = ({ message, type = 'success', onClose }) => (
+            <div className={`fixed top-4 right-4 z-[70] px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 fade-in ${type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                {type === 'success' ? <Icons.Check /> : <Icons.AlertCircle />}<span className="font-medium">{message}</span><button onClick={onClose} className="ml-2 hover:bg-white/20 rounded-full p-1"><Icons.X /></button>
+            </div>
+        );
+        const ConfirmModal = ({ title, message, onConfirm, onCancel }) => (
+            <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 fade-in">
+                <Card className="w-full max-w-sm bg-white overflow-hidden shadow-2xl p-6 text-center">
+                    <Icons.AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">{title}</h3>
+                    <p className="text-slate-500 mb-6">{message}</p>
+                    <div className="flex gap-2">
+                        <Button variant="secondary" onClick={onCancel} className="flex-1">ยกเลิก</Button>
+                        <Button variant="danger" onClick={onConfirm} className="flex-1">ยืนยัน</Button>
+                    </div>
+                </Card>
+            </div>
+        );
+
+        const LoginScreen = ({ onLogin }) => {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const handleSubmit = (e) => { e.preventDefault(); onLogin(username, password); };
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+                    <Card className="w-full max-w-sm p-8 shadow-xl">
+                        <div className="text-center mb-8"><div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600"><Icons.Smartphone className="w-8 h-8" /></div><h1 className="text-2xl font-bold text-slate-800">เข้าสู่ระบบ</h1><p className="text-slate-500 text-sm">US POS System</p></div>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div><label className="block text-sm font-medium text-slate-700 mb-1">ชื่อผู้ใช้</label><input type="text" className="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" value={username} onChange={e => setUsername(e.target.value)} autoFocus /></div>
+                            <div><label className="block text-sm font-medium text-slate-700 mb-1">รหัสผ่าน</label><input type="password" class="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" value={password} onChange={e => setPassword(e.target.value)} /></div>
+                            <Button type="submit" className="w-full py-3 text-lg">เข้าสู่ระบบ</Button>
+                        </form>
+                    </Card>
+                </div>
+            );
+        };
+
+        // --- 4. Main Application ---
+        function MobileShopPOS() {
+            // States
+            const [currentUser, setCurrentUser] = useState(null);
             const [activeTab, setActiveTab] = useState('pos');
+            
+            // Data
             const [inventory, setInventory] = useState(INITIAL_STOCK);
             const [cart, setCart] = useState([]);
             const [partners, setPartners] = useState([]);
             const [salesLog, setSalesLog] = useState([]);
             const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+            const [users, setUsers] = useState(INITIAL_USERS);
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             
-            // Search & Filter
+            // UI
+            const [notification, setNotification] = useState(null);
+            const [confirmData, setConfirmData] = useState(null);
+
+            // Filters
             const [searchQuery, setSearchQuery] = useState('');
             const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
             const [stockSearchQuery, setStockSearchQuery] = useState('');
             const [stockSelectedCategory, setStockSelectedCategory] = useState('ทั้งหมด');
+            const [reportPeriod, setReportPeriod] = useState('daily');
 
             // Modals
             const [showCheckoutModal, setShowCheckoutModal] = useState(false);
             const [discountModal, setDiscountModal] = useState({ show: false, index: null, amount: '', reason: '' });
             const [saleDetailModal, setSaleDetailModal] = useState({ show: false, sale: null });
-            
-            // Installment Modals
             const [installmentPayModal, setInstallmentPayModal] = useState({ show: false, partner: null, amount: '' });
             const [importStockModal, setImportStockModal] = useState({ show: false, item: null, price: '', owner: 'ร้านเรา', mode: 'full', commission: '' });
-            
-            // Stock/Category Modals
             const [stockEditId, setStockEditId] = useState(null);
             const [stockFormData, setStockFormData] = useState({});
-            const [categoryModal, setCategoryModal] = useState(false);
-            const [isAddingCategory, setIsAddingCategory] = useState(false);
-            const [catSearchQuery, setCatSearchQuery] = useState('');
-            const [newCategoryName, setNewCategoryName] = useState('');
-            const [editingCatIndex, setEditingCatIndex] = useState(null);
-            const [editingCatName, setEditingCatName] = useState('');
-            const [deleteConfirmIndex, setDeleteConfirmIndex] = useState(null);
+            const [userModal, setUserModal] = useState(false);
+            const [userForm, setUserForm] = useState({});
 
-            // Sub-views
+            // Sub-view Inputs
             const [repairData, setRepairData] = useState({ name: '', cost: '', price: '' });
             const [topupData, setTopupData] = useState({ number: '', amount: '' });
             const [installmentViewMode, setInstallmentViewMode] = useState('list');
             const [extForm, setExtForm] = useState({ shop: '', model: '', price: '', cost: '', mode: 'commission', commission: '' });
-            const [reportPeriod, setReportPeriod] = useState('daily');
             
             const fileInputRef = useRef(null);
 
-            // --- Load Data ---
+            // Load Data
             useEffect(() => {
-                const savedInv = localStorage.getItem('pos_inventory');
-                const savedSales = localStorage.getItem('pos_sales');
-                const savedPartners = localStorage.getItem('pos_partners');
-                const savedCats = localStorage.getItem('pos_categories');
-                if (savedInv) setInventory(JSON.parse(savedInv));
-                if (savedSales) setSalesLog(JSON.parse(savedSales));
-                if (savedPartners) setPartners(JSON.parse(savedPartners));
-                if (savedCats) setCategories(JSON.parse(savedCats));
+                try {
+                    const savedInv = localStorage.getItem('pos_inventory');
+                    const savedSales = localStorage.getItem('pos_sales');
+                    const savedPartners = localStorage.getItem('pos_partners');
+                    const savedCats = localStorage.getItem('pos_categories');
+                    const savedUsers = localStorage.getItem('pos_users');
+                    if(savedInv) setInventory(JSON.parse(savedInv) || INITIAL_STOCK);
+                    if(savedSales) setSalesLog(JSON.parse(savedSales) || []);
+                    if(savedPartners) setPartners(JSON.parse(savedPartners) || []);
+                    if(savedCats) setCategories(JSON.parse(savedCats) || INITIAL_CATEGORIES);
+                    if(savedUsers) setUsers(JSON.parse(savedUsers) || INITIAL_USERS);
+                } catch (e) { console.error("Data load error", e); }
             }, []);
 
+            // Save Data
             useEffect(() => {
                 localStorage.setItem('pos_inventory', JSON.stringify(inventory));
                 localStorage.setItem('pos_sales', JSON.stringify(salesLog));
                 localStorage.setItem('pos_partners', JSON.stringify(partners));
                 localStorage.setItem('pos_categories', JSON.stringify(categories));
-            }, [inventory, salesLog, partners, categories]);
+                localStorage.setItem('pos_users', JSON.stringify(users));
+            }, [inventory, salesLog, partners, categories, users]);
 
-            // --- POS Logic ---
-            const addToCart = (item, type = 'product', customData = {}) => {
+            // Memoized Data (Moved to top level)
+            const stockFiltered = useMemo(() => {
+                const term = stockSearchQuery.toLowerCase();
+                const catTerm = stockSelectedCategory === 'ทั้งหมด' ? '' : stockSelectedCategory.toLowerCase();
+                return inventory.filter(i => {
+                    const matchesSearch = i.name.toLowerCase().includes(term) || (i.productId && i.productId.toLowerCase().includes(term));
+                    const matchesCategory = stockSelectedCategory === 'ทั้งหมด' || i.group.toLowerCase().includes(catTerm);
+                    return matchesSearch && matchesCategory;
+                });
+            }, [inventory, stockSearchQuery, stockSelectedCategory]);
+
+            const posFiltered = useMemo(() => {
+                const term = searchQuery.toLowerCase();
+                const catTerm = selectedCategory === 'ทั้งหมด' ? '' : selectedCategory.toLowerCase();
+                return inventory.filter(i => {
+                    const matchesSearch = i.name.toLowerCase().includes(term) || (i.productId && i.productId.toLowerCase().includes(term));
+                    const matchesCategory = selectedCategory === 'ทั้งหมด' || i.group.toLowerCase().includes(catTerm);
+                    return matchesSearch && matchesCategory;
+                });
+            }, [inventory, searchQuery, selectedCategory]);
+
+            // --- REPORT SUMMARY CALCULATIONS ---
+            const reportSummary = useMemo(() => {
+                const filteredSales = salesLog.filter(sale => {
+                    const d = new Date(sale.date); const now = new Date();
+                    if (reportPeriod === 'daily') return d.toDateString() === now.toDateString();
+                    if (reportPeriod === 'monthly') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    if (reportPeriod === 'yearly') return d.getFullYear() === now.getFullYear();
+                    return true;
+                });
+                
+                return filteredSales.reduce((acc, curr) => {
+                    const currentBillCost = curr.items.reduce((iAcc, item) => iAcc + ((item.cost || 0) * item.qty), 0);
+                    const currentBillTopupProfit = curr.items.reduce((iAcc, item) => {
+                        if (item.name.startsWith('[เติมเงิน]')) return iAcc + (((item.price - (item.cost || 0)) * item.qty) - (item.itemDiscount || 0));
+                        return iAcc;
+                    }, 0);
+                    return {
+                        sales: acc.sales + curr.total,
+                        profit: acc.profit + curr.profit,
+                        cost: acc.cost + currentBillCost,
+                        topupSales: acc.topupSales + (curr.items.filter(i => i.name.startsWith('[เติมเงิน]')).reduce((s,i) => s + i.price * i.qty, 0)),
+                        topupProfit: acc.topupProfit + currentBillTopupProfit,
+                        count: acc.count + 1,
+                        filteredSales: filteredSales
+                    };
+                }, { sales: 0, profit: 0, cost: 0, topupSales: 0, topupProfit: 0, count: 0, filteredSales: [] });
+            }, [salesLog, reportPeriod]);
+
+            // --- Handlers ---
+            const showNotif = (msg, type = 'success') => { setNotification({ message: msg, type }); setTimeout(() => setNotification(null), 3000); };
+            const confirmAction = (title, message, onConfirm) => { setConfirmData({ title, message, onConfirm: () => { onConfirm(); setConfirmData(null); } }); };
+            
+            const handleLogin = (u, p) => {
+                const user = users.find(user => user.username === u && user.password === p);
+                if(user) { setCurrentUser(user); if(user.role==='admin'||user.permissions.includes('pos')) setActiveTab('pos'); else if(user.permissions.length>0) setActiveTab(user.permissions[0]); } else showNotif('รหัสผิด', 'error');
+            };
+            const handleLogout = () => { setCurrentUser(null); setCart([]); };
+            const hasPermission = (perm) => {
+                if (!currentUser) return false;
+                if (currentUser.role === 'admin' || currentUser.permissions.includes('all')) return true;
+                return currentUser.permissions.includes(perm);
+            };
+
+            const handleAddRepair = () => {
+                const name = repairData.name.trim(); const price = parseNum(repairData.price); const cost = parseNum(repairData.cost);
+                if (!name || price <= 0) return showNotif('กรุณากรอกข้อมูล', 'error');
+                addToCart({ id: Date.now(), name: `[ซ่อม] ${name}`, price, cost, qty: 1 }, 'service');
+                setRepairData({name:'', cost:'', price:''}); showNotif('เพิ่มรายการซ่อมแล้ว');
+            };
+            const handleAddTopup = () => {
+                const num = topupData.number.trim(); const amt = parseNum(topupData.amount);
+                if (!num || amt <= 0) return showNotif('กรุณากรอกข้อมูล', 'error');
+                const cost = amt - (amt * 0.03);
+                addToCart({ id: Date.now(), name: `[เติมเงิน] ${num}`, price: amt, cost, qty: 1 }, 'service');
+                setTopupData({number:'', amount:''}); showNotif('เพิ่มรายการเติมเงินแล้ว');
+            };
+
+            const generateID = () => {
+                const pIds = inventory.map(i => i.productId).filter(pid => pid && pid.startsWith('P-')).map(pid => parseInt(pid.replace('P-', ''), 10)).filter(num => !isNaN(num));
+                const maxId = pIds.length > 0 ? Math.max(...pIds) : 0;
+                setStockFormData(prev => ({ ...prev, productId: 'P-' + (maxId + 1).toString().padStart(5, '0') }));
+            };
+            const handleStockSave = () => {
+                const categoryName = stockFormData.group ? stockFormData.group.trim() : 'ทั่วไป';
+                if (!categories.includes(categoryName) && categoryName !== '') setCategories(prev => [...prev, categoryName]);
+                const newItem = { ...stockFormData, group: categoryName, qty: parseNum(stockFormData.qty), cost: parseNum(stockFormData.cost), price: parseNum(stockFormData.price) };
+                if (stockEditId === 'new') setInventory([...inventory, { ...newItem, id: Date.now() }]);
+                else setInventory(inventory.map(i => i.id === stockEditId ? newItem : i));
+                setStockEditId(null); showNotif('บันทึกสำเร็จ');
+            };
+            
+            const addToCart = (item, type='product', custom={}) => {
                 const existing = cart.find(c => c.name === item.name && c.type === type);
-                if (type === 'product') {
-                    if (item.qty <= 0) return alert('สินค้าหมด!');
-                    if (existing && existing.qty + 1 > item.qty) return alert('สต็อกไม่พอ');
+                if (type==='product') {
+                    if (item.qty <= 0) return showNotif('สินค้าหมด!', 'error');
+                    if (existing && existing.qty + 1 > item.qty) return showNotif('สต็อกไม่พอ', 'error');
                 }
-                if (existing) {
-                    setCart(cart.map(c => c.name === item.name && c.type === type ? { ...c, qty: c.qty + 1 } : c));
-                } else {
-                    setCart([...cart, { ...item, type, qty: 1, itemDiscount: 0, itemDiscountReason: '', ...customData }]);
-                }
+                if (existing) setCart(cart.map(c => c.name === item.name && c.type === type ? { ...c, qty: c.qty + 1 } : c));
+                else setCart([...cart, { ...item, type, qty: 1, itemDiscount: 0, itemDiscountReason: '', ...custom }]);
+                showNotif('เพิ่มลงตะกร้า');
             };
             const updateCartQty = (idx, delta) => {
-                const newCart = [...cart];
-                newCart[idx].qty += delta;
+                const newCart = [...cart]; newCart[idx].qty += delta;
                 if (newCart[idx].qty <= 0) newCart.splice(idx, 1);
                 setCart(newCart);
             };
+            
+            // --- FIXED: Discount Button Logic ---
+            const openDiscountModal = (index) => {
+                const item = cart[index];
+                if (!item) return;
+                setDiscountModal({ 
+                    show: true, 
+                    index: index, 
+                    amount: item.itemDiscount ? String(item.itemDiscount) : '', 
+                    reason: item.itemDiscountReason || '' 
+                });
+            };
             const saveDiscount = () => {
-                const newCart = [...cart];
-                newCart[discountModal.index].itemDiscount = parseFloat(discountModal.amount) || 0;
-                newCart[discountModal.index].itemDiscountReason = discountModal.reason;
-                setCart(newCart);
+                if (discountModal.index !== null && cart[discountModal.index]) {
+                    const newCart = [...cart];
+                    const updatedItem = { ...newCart[discountModal.index] };
+                    updatedItem.itemDiscount = parseNum(discountModal.amount);
+                    updatedItem.itemDiscountReason = discountModal.reason;
+                    newCart[discountModal.index] = updatedItem;
+                    setCart(newCart);
+                    showNotif('บันทึกส่วนลดแล้ว');
+                }
                 setDiscountModal({ show: false, index: null, amount: '', reason: '' });
             };
-            const calculateTotal = () => cart.reduce((sum, i) => sum + ((i.price * i.qty) - (i.itemDiscount || 0)), 0);
 
+            const calculateCartTotal = () => cart.reduce((sum, item) => sum + ((item.price * item.qty) - (item.itemDiscount || 0)), 0);
             const handleCheckout = (billDiscount, billReason) => {
-                const total = calculateTotal();
+                const total = calculateCartTotal();
                 const netTotal = total - billDiscount;
-                const saleRecord = {
-                    id: Date.now(),
-                    date: new Date().toISOString(),
-                    items: cart,
-                    subtotal: total,
-                    billDiscount,
-                    billDiscountReason: billReason,
-                    total: netTotal,
-                    profit: cart.reduce((sum, i) => sum + ((i.price - (i.cost||0))*i.qty) - (i.itemDiscount||0), 0) - billDiscount
-                };
-                
-                // Cut Stock
+                const saleRecord = { id: Date.now(), date: new Date().toISOString(), items: cart, subtotal: total, billDiscount, billDiscountReason: billReason, total: netTotal, profit: cart.reduce((sum, i) => sum + ((i.price - (i.cost||0))*i.qty) - (i.itemDiscount||0), 0) - billDiscount };
                 const newInv = [...inventory];
+                let newPartners = partners.map(p => ({...p}));
                 cart.forEach(c => {
-                    if(c.type === 'product') {
-                        const idx = newInv.findIndex(i => i.id === c.id);
-                        if(idx !== -1) newInv[idx].qty -= c.qty;
-                    }
-                    // Installment Logic: Update paid amount
-                    if(c.installmentType === 'full' && c.partnerId) {
-                        setPartners(prev => prev.map(p => p.id === c.partnerId ? {...p, paidAmount: (p.paidAmount||0) + c.price} : p));
-                    }
-                    // Installment Logic: Remove commission items
-                    if(c.installmentType === 'commission' && c.partnerId) {
-                        setPartners(prev => prev.filter(p => p.id !== c.partnerId));
-                    }
+                    if(c.type === 'product') { const idx = newInv.findIndex(i => i.id === c.id); if(idx !== -1) newInv[idx].qty -= c.qty; }
+                    if(c.partnerId) { const idx = newPartners.findIndex(p => p.id === c.partnerId); if(idx !== -1) { if(c.installmentType === 'full') newPartners[idx].paidAmount = (newPartners[idx].paidAmount||0) + c.price; if(c.installmentType === 'commission') newPartners[idx].isFinished = true; } }
                 });
-                
-                // Clear finished full installments
-                setPartners(prev => prev.filter(p => {
-                    if(p.revenueMode === 'full') {
-                         return (p.price - (p.paidAmount || 0)) > 0;
-                    }
-                    return true; 
-                }));
-
-                setInventory(newInv);
-                setSalesLog([...salesLog, saleRecord]);
-                setCart([]);
-                setShowCheckoutModal(false);
-                alert('บันทึกสำเร็จ');
+                newPartners = newPartners.filter(p => !(p.isFinished || (p.revenueMode==='full' && (p.price - (p.paidAmount||0)) <= 0)));
+                setInventory(newInv); setPartners(newPartners); setSalesLog([...salesLog, saleRecord]); setCart([]); setShowCheckoutModal(false); showNotif('บันทึกการขายสำเร็จ');
             };
-
-            // --- Stock Logic ---
-            const handleStockSave = () => {
-                const newItem = {
-                    ...stockFormData,
-                    qty: parseInt(stockFormData.qty) || 0,
-                    cost: parseFloat(stockFormData.cost) || 0,
-                    price: parseFloat(stockFormData.price) || 0
-                };
-                if(stockEditId === 'new') setInventory([...inventory, { ...newItem, id: Date.now() }]);
-                else setInventory(inventory.map(i => i.id === stockEditId ? newItem : i));
-                setStockEditId(null);
-            };
-            const generateID = () => {
-                const max = inventory.reduce((m, i) => {
-                    if(i.productId && i.productId.startsWith('P-')) {
-                        const n = parseInt(i.productId.split('-')[1]);
-                        return n > m ? n : m;
-                    }
-                    return m;
-                }, 0);
-                setStockFormData({...stockFormData, productId: `P-${String(max+1).padStart(4,'0')}`});
-            };
-
-            // --- Installment Logic ---
             const confirmImportStock = () => {
                 const { item, price, owner, mode, commission } = importStockModal;
+                if(!item || !price) return;
                 const newInv = inventory.map(i => i.id === item.id ? { ...i, qty: i.qty - 1 } : i);
                 setInventory(newInv);
                 setPartners([...partners, {
                     id: Date.now(), type: 'internal', shop: owner, model: item.name,
-                    price: parseFloat(price), cost: item.cost, revenueMode: mode, 
-                    commission: parseFloat(commission)||0, paidAmount: 0, status: 'normal'
+                    price: parseNum(price), cost: item.cost, revenueMode: mode, 
+                    commission: parseNum(commission), paidAmount: 0, status: 'normal'
                 }]);
                 setImportStockModal({ show: false, item: null, price: '', owner: 'ร้านเรา', mode: 'full', commission: '' });
+                showNotif('ดึงสินค้าสำเร็จ');
             };
-
+            const handleAddExternal = () => {
+                if(!extForm.shop || !extForm.model) return showNotif('กรุณากรอกข้อมูลให้ครบ', 'error');
+                setPartners([...partners, { 
+                    ...extForm, id: Date.now(), type: 'external',
+                    price: parseNum(extForm.price), cost: parseNum(extForm.cost),
+                    commission: parseNum(extForm.commission), revenueMode: extForm.mode,
+                    paidAmount: 0, status: 'normal'
+                }]);
+                setExtForm({ shop: '', model: '', price: '', cost: '', mode: 'commission', commission: '' });
+                showNotif('เพิ่มเครื่องนอกสำเร็จ');
+            };
             const confirmInstallmentPay = () => {
                 const { partner, amount } = installmentPayModal;
-                const amt = parseFloat(amount);
+                const amt = parseNum(amount);
                 if(!amt) return;
-
                 if(partner.revenueMode === 'full') {
                    const cost = (amt / partner.price) * partner.cost;
                    addToCart({ id: Date.now(), name: `[ค่างวด] ${partner.model}`, price: amt, cost, qty: 1 }, 'service', { partnerId: partner.id, installmentType: 'full' });
                 } else {
                     if(partner.status === 'waiting_owner') {
-                        // Receive Commission
                         addToCart({ id: Date.now(), name: `[ค่าคอม] ${partner.model}`, price: amt, cost: 0, qty: 1 }, 'service', { partnerId: partner.id, installmentType: 'commission' });
-                        // Update status to wait for checkout to remove
                     } else {
-                        // Receive from customer
                         setPartners(partners.map(p => p.id === partner.id ? {...p, status: 'waiting_owner', pendingAmount: amt} : p));
-                        alert('รับเงินลูกค้าแล้ว รอเคลียร์ยอดกับผู้ฝาก');
+                        showNotif('รับเงินลูกค้าแล้ว รอเคลียร์ยอดกับผู้ฝาก');
                     }
                 }
                 setInstallmentPayModal({ show: false, partner: null, amount: '' });
             };
-
-            // --- Backup ---
-            const handleExport = () => {
-                const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ inventory, salesLog, partners, categories }));
+            const handleUserSave = () => {
+                if(!userForm.username || !userForm.password) return showNotif('กรอกข้อมูลไม่ครบ', 'error');
+                if(userForm.id) setUsers(users.map(u => u.id === userForm.id ? userForm : u)); else setUsers([...users, { ...userForm, id: Date.now() }]);
+                setUserModal(false);
+            };
+            const togglePermission = (perm) => {
+                let newPerms = userForm.permissions || [];
+                if (newPerms.includes('all')) newPerms = [];
+                if (newPerms.includes(perm)) newPerms = newPerms.filter(p => p !== perm); else newPerms = [...newPerms, perm];
+                setUserForm({ ...userForm, permissions: newPerms });
+            };
+            const handleExportData = () => {
+                const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ inventory, salesLog, partners, categories, users }));
                 const a = document.createElement('a'); a.href = data; a.download = "backup.json"; a.click();
             };
-            const handleImport = (e) => {
+            const handleImportData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
                 const r = new FileReader();
                 r.onload = (ev) => {
-                    const d = JSON.parse(ev.target.result);
-                    if(d.inventory) { setInventory(d.inventory); setSalesLog(d.salesLog); setPartners(d.partners); setCategories(d.categories); alert('กู้คืนสำเร็จ'); }
+                    try { const d = JSON.parse(ev.target.result); if(d.inventory) { confirmAction('กู้คืนข้อมูล', 'การกู้คืนจะทับข้อมูลปัจจุบันทั้งหมด ยืนยันหรือไม่?', () => { setInventory(d.inventory); setSalesLog(d.salesLog); setPartners(d.partners); setCategories(d.categories); if(d.users) setUsers(d.users); showNotif('กู้คืนสำเร็จ'); }); } } catch(err) { showNotif('ไฟล์เสียหาย', 'error'); }
                 };
-                r.readAsText(e.target.files[0]);
+                r.readAsText(file);
+                e.target.value = null;
             };
 
-            // --- Renders ---
-            const renderStockView = () => {
-                const filtered = inventory.filter(i => {
-                    const q = stockSearchQuery.toLowerCase();
-                    const cat = stockSelectedCategory === 'ทั้งหมด' || i.group === stockSelectedCategory;
-                    return (i.name.toLowerCase().includes(q) || (i.productId||'').toLowerCase().includes(q)) && cat;
-                });
-                return (
-                    <div className="max-w-6xl mx-auto p-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">สต็อกสินค้า</h2>
-                            <div className="flex gap-2">
-                                <button onClick={()=>setCategoryModal(true)} className="px-3 py-2 bg-gray-200 rounded flex items-center gap-1"><Settings size={16}/> หมวดหมู่</button>
-                                <button onClick={()=>{setStockEditId('new'); setStockFormData({group:categories[0], name:'', qty:1, cost:0, price:0, productId:''})}} className="px-3 py-2 bg-blue-600 text-white rounded flex items-center gap-1"><Plus size={16}/> เพิ่มสินค้า</button>
-                            </div>
-                        </div>
-                        <div className="flex gap-2 mb-4">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-2.5 text-gray-400" size={18}/>
-                                <input className="w-full pl-10 p-2 border rounded" placeholder="ค้นหา (ชื่อ/รหัส)..." value={stockSearchQuery} onChange={e=>setStockSearchQuery(e.target.value)} />
-                            </div>
-                            <div className="relative w-1/3">
-                                <select className="w-full p-2 border rounded appearance-none" value={stockSelectedCategory} onChange={e=>setStockSelectedCategory(e.target.value)}>
-                                    <option value="ทั้งหมด">ทุกหมวดหมู่</option>
-                                    {categories.map(c=><option key={c} value={c}>{c}</option>)}
-                                </select>
-                                <ChevronRight className="absolute right-3 top-3 rotate-90 text-gray-400" size={14}/>
-                            </div>
-                        </div>
-                        <div className="bg-white rounded shadow overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-gray-50 border-b">
-                                    <tr><th className="p-3">ID</th><th className="p-3">หมวด</th><th className="p-3">ชื่อสินค้า</th><th className="p-3 text-center">คงเหลือ</th><th className="p-3 text-right">ทุน</th><th className="p-3 text-right">ขาย</th><th className="p-3 text-center">จัดการ</th></tr>
-                                </thead>
-                                <tbody>
-                                    {filtered.map(i => (
-                                        <tr key={i.id} className="border-b hover:bg-gray-50">
-                                            <td className="p-3 text-gray-500 font-mono">{i.productId}</td>
-                                            <td className="p-3 text-gray-600">{i.group}</td>
-                                            <td className="p-3 font-medium">{i.name}</td>
-                                            <td className="p-3 text-center"><span className={`px-2 py-1 rounded-full text-xs ${i.qty>0?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}`}>{i.qty}</span></td>
-                                            <td className="p-3 text-right">{i.cost.toLocaleString()}</td>
-                                            <td className="p-3 text-right font-bold text-blue-600">{i.price.toLocaleString()}</td>
-                                            <td className="p-3 text-center">
-                                                <button onClick={()=>{setStockEditId(i.id); setStockFormData(i)}} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Edit size={16}/></button>
-                                                <button onClick={()=>{if(confirm('ลบ?')) setInventory(inventory.filter(x=>x.id!==i.id))}} className="p-1 text-red-600 hover:bg-red-50 rounded ml-1"><Trash2 size={16}/></button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        {stockEditId && (
-                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                                <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
-                                    <h3 className="text-lg font-bold mb-4">{stockEditId==='new'?'เพิ่มสินค้า':'แก้ไขสินค้า'}</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex gap-2">
-                                            <select className="flex-1 border p-2 rounded" value={stockFormData.group} onChange={e=>setStockFormData({...stockFormData, group: e.target.value})}>{categories.map(c=><option key={c}>{c}</option>)}</select>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input className="flex-1 border p-2 rounded" placeholder="รหัสสินค้า" value={stockFormData.productId||''} onChange={e=>setStockFormData({...stockFormData, productId: e.target.value})}/>
-                                            <button onClick={generateID} className="px-3 bg-gray-200 rounded text-xs">Auto</button>
-                                        </div>
-                                        <input className="w-full border p-2 rounded" placeholder="ชื่อสินค้า" value={stockFormData.name} onChange={e=>setStockFormData({...stockFormData, name: e.target.value})}/>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <input type="number" className="border p-2 rounded" placeholder="จำนวน" value={stockFormData.qty} onChange={e=>setStockFormData({...stockFormData, qty: e.target.value})}/>
-                                            <input type="number" className="border p-2 rounded" placeholder="ทุน" value={stockFormData.cost} onChange={e=>setStockFormData({...stockFormData, cost: e.target.value})}/>
-                                            <input type="number" className="border p-2 rounded" placeholder="ขาย" value={stockFormData.price} onChange={e=>setStockFormData({...stockFormData, price: e.target.value})}/>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2 mt-6">
-                                        <button onClick={()=>setStockEditId(null)} className="flex-1 py-2 bg-gray-100 rounded">ยกเลิก</button>
-                                        <button onClick={handleStockSave} className="flex-1 py-2 bg-blue-600 text-white rounded">บันทึก</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            };
+            // --- Condition Check for Login ---
+            if (!currentUser) return <LoginScreen onLogin={handleLogin} />;
 
-            // Main Render
             return (
                 <div className="flex h-screen bg-slate-100 text-slate-900 font-sans overflow-hidden">
-                    {/* Sidebar */}
                     <aside className="hidden md:flex flex-col w-64 bg-white border-r shadow-sm z-20">
-                        <div className="p-6 border-b"><h1 className="text-xl font-bold text-blue-600 flex items-center gap-2"><Smartphone className="text-blue-600"/> Mobile POS</h1></div>
+                        <div className="p-6 border-b"><h1 className="text-xl font-bold text-blue-600 flex items-center gap-2"><Icons.Smartphone className="text-blue-600"/> Mobile POS</h1></div>
                         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                            <button onClick={()=>setActiveTab('pos')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab==='pos'?'bg-blue-50 text-blue-700 font-semibold':'text-gray-600 hover:bg-gray-50'}`}><CreditCard size={20}/> ขายหน้าร้าน</button>
-                            <button onClick={()=>setActiveTab('services')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab==='services'?'bg-blue-50 text-blue-700 font-semibold':'text-gray-600 hover:bg-gray-50'}`}><Wrench size={20}/> บริการ (ซ่อม/เติม)</button>
-                            <button onClick={()=>setActiveTab('installments')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab==='installments'?'bg-blue-50 text-blue-700 font-semibold':'text-gray-600 hover:bg-gray-50'}`}><User size={20}/> ระบบฝากผ่อน</button>
-                            <button onClick={()=>setActiveTab('stock')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab==='stock'?'bg-blue-50 text-blue-700 font-semibold':'text-gray-600 hover:bg-gray-50'}`}><Package size={20}/> จัดการสต็อก</button>
-                            <button onClick={()=>setActiveTab('report')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab==='report'?'bg-blue-50 text-blue-700 font-semibold':'text-gray-600 hover:bg-gray-50'}`}><BarChart3 size={20}/> รายงานยอดขาย</button>
+                            {['pos', 'services', 'installments', 'stock', 'report', 'users'].map(tab => {
+                                if ((tab==='users' && !hasPermission('users')) || (!hasPermission(tab) && tab!=='users')) return null;
+                                return <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg capitalize ${activeTab === tab ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>{tab==='pos' && <Icons.CreditCard className="w-5 h-5"/>}{tab==='services' && <Icons.Wrench className="w-5 h-5"/>}{tab==='installments' && <Icons.User className="w-5 h-5"/>}{tab==='stock' && <Icons.Package className="w-5 h-5"/>}{tab==='report' && <Icons.BarChart3 className="w-5 h-5"/>}{tab==='users' && <Icons.Users className="w-5 h-5"/>} <span className="capitalize">{PERMISSION_LABELS[tab]}</span></button>
+                            })}
                         </nav>
-                        <div className="p-4 border-t bg-slate-50">
-                            <div className="text-xs font-bold text-gray-400 mb-2 uppercase">จัดการข้อมูล</div>
-                            <div className="flex gap-2">
-                                <button onClick={handleExport} className="flex-1 py-1.5 border rounded bg-white text-xs hover:bg-gray-50 flex justify-center items-center gap-1"><Download size={12}/> Backup</button>
-                                <button onClick={()=>fileInputRef.current.click()} className="flex-1 py-1.5 border rounded bg-white text-xs hover:bg-gray-50 flex justify-center items-center gap-1"><Upload size={12}/> Restore</button>
-                                <input type="file" ref={fileInputRef} className="hidden" onChange={handleImport} accept=".json"/>
-                            </div>
-                        </div>
+                        <div className="p-4 border-t bg-slate-50 flex justify-between items-center"><div className="text-sm font-medium text-slate-700">{currentUser.name}</div><button onClick={handleLogout} className="text-red-500 hover:text-red-700 p-2"><Icons.LogOut className="w-5 h-5"/></button></div>
+                        <div className="p-4 border-t bg-slate-50"><div className="text-xs font-bold text-gray-400 mb-2 uppercase">จัดการข้อมูล</div><div className="flex gap-2"><button onClick={handleExportData} className="flex-1 py-1.5 border rounded bg-white text-xs hover:bg-gray-50 flex justify-center items-center gap-1"><Icons.Download className="w-3 h-3"/> Backup</button><button onClick={()=>fileInputRef.current.click()} className="flex-1 py-1.5 border rounded bg-white text-xs hover:bg-gray-50 flex justify-center items-center gap-1"><Icons.Upload className="w-3 h-3"/> Restore</button><input type="file" ref={fileInputRef} className="hidden" onChange={handleImportData} accept=".json"/></div></div>
                     </aside>
+                    <div className="md:hidden fixed top-0 w-full bg-white border-b z-50 px-4 py-3 flex justify-between items-center shadow-sm"><h1 className="font-bold text-blue-600 flex items-center gap-2"><Icons.Smartphone className="w-5 h-5"/> Mobile POS</h1><button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2"><Icons.Menu className="w-6 h-6"/></button></div>
+                    {isMobileMenuOpen && (<div className="md:hidden fixed inset-0 bg-white z-40 pt-16 px-4">{['pos','services','installments','stock','report', 'users'].map(t => hasPermission(t) ? <button key={t} onClick={() => {setActiveTab(t); setIsMobileMenuOpen(false)}} className="block w-full text-left p-4 border-b capitalize">{PERMISSION_LABELS[t]}</button> : null)}<button onClick={handleLogout} className="block w-full text-left p-4 border-b text-red-600">ออกจากระบบ</button><button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4"><Icons.X/></button></div>)}
+                    
+                    <main className="flex-1 pt-16 md:pt-0 overflow-y-auto relative bg-slate-50">
+                        {/* 1. STOCK VIEW */}
+                        {activeTab === 'stock' && (
+                            <div className="max-w-6xl mx-auto p-4">
+                                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">จัดการสต็อก</h2><Button onClick={() => { setStockEditId('new'); setStockFormData({group: categories[0] || 'ทั่วไป', name: '', qty: 1, cost: 0, price: 0, productId: ''}); }}><Icons.Plus className="w-4 h-4 mr-1"/> เพิ่มสินค้า</Button></div>
+                                <div className="mb-6 flex flex-col md:flex-row gap-2"><div className="relative flex-1"><span className="absolute left-3 top-2.5 text-slate-400"><Icons.Search className="w-4 h-4"/></span><input className="w-full pl-10 p-2 border rounded" placeholder="ค้นหา (ชื่อ/รหัส)..." value={stockSearchQuery} onChange={e => setStockSearchQuery(e.target.value)} /></div><div className="relative w-full md:w-1/3 min-w-[200px]"><div className="absolute left-3 top-3 text-slate-500 pointer-events-none"><Icons.Filter size={18} /></div><input list="stock-category-list" type="text" className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700 font-medium" placeholder="หมวดหมู่..." value={stockSelectedCategory === 'ทั้งหมด' ? '' : stockSelectedCategory} onChange={e => setStockSelectedCategory(e.target.value || 'ทั้งหมด')} onFocus={(e) => e.target.select()} /><datalist id="stock-category-list"><option value="ทั้งหมด">ทั้งหมด</option>{categories.map(c => <option key={c} value={c} />)}</datalist></div></div>
+                                <div className="bg-white rounded shadow overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-slate-50 border-b"><tr><th className="p-3">ID</th><th className="p-3">หมวด</th><th className="p-3">ชื่อสินค้า</th><th className="p-3 text-center">คงเหลือ</th><th className="p-3 text-right">ทุน</th><th className="p-3 text-right">ขาย</th><th className="p-3 text-center">จัดการ</th></tr></thead><tbody>{stockFiltered.map(item => (<tr key={item.id} className="hover:bg-slate-50 border-b last:border-0"><td className="p-3 text-xs text-slate-400 font-mono">{item.productId || '-'}</td><td className="p-3 text-sm text-slate-500">{item.group}</td><td className="p-3 font-medium">{item.name}</td><td className="p-3 text-center"><span className={`px-2 py-1 rounded-full text-xs ${item.qty>0?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}`}>{item.qty}</span></td><td className="p-3 text-right">{item.cost.toLocaleString()}</td><td className="p-3 text-right font-bold text-blue-600">{item.price.toLocaleString()}</td><td className="p-3 flex justify-center gap-2"><button onClick={() => { setStockEditId(item.id); setStockFormData(item); }} className="p-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"><Icons.Edit className="w-4 h-4"/></button><button onClick={() => confirmAction('ลบสินค้า', `ต้องการลบ ${item.name}?`, () => setInventory(inventory.filter(x=>x.id!==item.id)))} className="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100"><Icons.Trash2 className="w-4 h-4"/></button></td></tr>))}</tbody></table></div>
+                                {stockEditId && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><Card className="w-full max-w-md p-6"><h3 className="text-xl font-bold mb-4">{stockEditId === 'new' ? 'เพิ่มสินค้าใหม่' : 'แก้ไขสินค้า'}</h3><div className="space-y-4">
+                                    <div><label className="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่ (เลือกหรือพิมพ์ใหม่)</label><input list="cat-options" className="w-full p-2 border rounded bg-white" value={stockFormData.group} onChange={e=>setStockFormData({...stockFormData, group: e.target.value})} placeholder="ระบุหมวดหมู่..." /><datalist id="cat-options">{categories.map(c => <option key={c} value={c} />)}</datalist></div>
+                                    <div><label className="block text-sm font-medium text-gray-700 mb-1">รหัสสินค้า / Barcode</label><div className="flex gap-2"><input className="flex-1 p-2 border rounded" placeholder="ยิงบาร์โค้ด หรือ พิมพ์รหัส" value={stockFormData.productId||''} onChange={e=>setStockFormData({...stockFormData, productId: e.target.value})}/><Button variant="secondary" onClick={generateID} className="px-3 text-xs">Auto</Button></div></div>
+                                    <div><label className="block text-sm font-medium text-gray-700 mb-1">ชื่อสินค้า</label><input className="w-full p-2 border rounded" placeholder="ระบุชื่อสินค้า" value={stockFormData.name} onChange={e=>setStockFormData({...stockFormData, name: e.target.value})}/></div>
+                                    <div className="grid grid-cols-3 gap-3"><div><label className="block text-sm font-medium text-gray-700 mb-1">จำนวน</label><input type="number" className="w-full p-2 border rounded" placeholder="0" value={stockFormData.qty} onChange={e=>setStockFormData({...stockFormData, qty: e.target.value})}/></div><div><label className="block text-sm font-medium text-gray-700 mb-1">ราคาทุน</label><input type="number" className="w-full p-2 border rounded" placeholder="0.00" value={stockFormData.cost} onChange={e=>setStockFormData({...stockFormData, cost: e.target.value})}/></div><div><label className="block text-sm font-medium text-gray-700 mb-1">ราคาขาย</label><input type="number" className="w-full p-2 border rounded" placeholder="0.00" value={stockFormData.price} onChange={e=>setStockFormData({...stockFormData, price: e.target.value})}/></div></div>
+                                    <div className="flex gap-2 pt-4"><Button variant="secondary" className="flex-1" onClick={() => setStockEditId(null)}>ยกเลิก</Button><Button className="flex-1" onClick={handleStockSave}>บันทึก</Button></div>
+                                </div></Card></div>)}
+                            </div>
+                        )}
 
-                    {/* Mobile Header */}
-                    <div className="md:hidden fixed top-0 w-full bg-white border-b z-50 px-4 py-3 flex justify-between items-center shadow-sm">
-                        <h1 className="font-bold text-blue-600 flex items-center gap-2"><Smartphone size={20}/> Mobile POS</h1>
-                        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2"><Menu /></button>
-                    </div>
-
-                    {/* Mobile Menu */}
-                    {isMobileMenuOpen && (
-                        <div className="md:hidden fixed inset-0 bg-white z-40 pt-16 px-4">
-                            <button onClick={() => setActiveTab('pos')} className="block w-full text-left p-4 border-b">ขายหน้าร้าน</button>
-                            <button onClick={() => setActiveTab('services')} className="block w-full text-left p-4 border-b">บริการ</button>
-                            <button onClick={() => setActiveTab('stock')} className="block w-full text-left p-4 border-b">สต็อก</button>
-                            <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4"><X/></button>
-                        </div>
-                    )}
-
-                    {/* Content */}
-                    <main className="flex-1 pt-16 md:pt-0 overflow-y-auto relative">
-                        {activeTab === 'stock' && renderStockView()}
+                        {/* 2. POS VIEW */}
                         {activeTab === 'pos' && (
                             <div className="flex flex-col h-full lg:flex-row">
                                 <div className="flex-1 p-4 overflow-y-auto pb-32 lg:pb-4">
-                                    <div className="flex gap-2 mb-4 sticky top-0 bg-slate-100 pt-2 pb-2 z-10">
-                                        <div className="relative flex-1">
-                                            <Search className="absolute left-3 top-2.5 text-gray-400" size={18}/>
-                                            <input className="w-full pl-10 p-2 border rounded shadow-sm" placeholder="ค้นหา..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus />
-                                        </div>
-                                        <div className="relative w-1/3 min-w-[120px]">
-                                            <input list="cats" className="w-full p-2 border rounded shadow-sm" placeholder="หมวดหมู่" value={selectedCategory==='ทั้งหมด'?'':selectedCategory} onChange={e=>setSelectedCategory(e.target.value||'ทั้งหมด')}/>
-                                            <datalist id="cats"><option value="ทั้งหมด"/>{categories.map(c=><option key={c} value={c}/>)}</datalist>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                                        {inventory.filter(i => {
-                                            const q = searchQuery.toLowerCase();
-                                            const cat = selectedCategory === 'ทั้งหมด' || i.group.toLowerCase().includes(selectedCategory.toLowerCase());
-                                            return (i.name.toLowerCase().includes(q) || (i.productId||'').toLowerCase().includes(q)) && cat;
-                                        }).map(item => (
-                                            <div key={item.id} onClick={()=>addToCart(item)} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md cursor-pointer border border-transparent hover:border-blue-300 transition-all">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-600">{item.group}</span>
-                                                    <span className={`text-[10px] px-2 py-0.5 rounded ${item.qty>0?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>{item.qty>0?item.qty:'หมด'}</span>
-                                                </div>
-                                                <div className="font-semibold text-gray-800 line-clamp-1">{item.name}</div>
-                                                <div className="text-xs text-gray-400 font-mono mb-1">{item.productId}</div>
-                                                <div className="text-lg font-bold text-blue-600">฿{item.price.toLocaleString()}</div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <div className="flex gap-2 mb-4 sticky top-0 bg-slate-100 pt-2 pb-2 z-10"><div className="relative flex-1"><span className="absolute left-3 top-2.5 text-gray-400"><Icons.Search className="w-4 h-4"/></span><input className="w-full pl-10 p-2 border rounded shadow-sm" placeholder="ค้นหา..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus /></div><div className="relative w-1/3 min-w-[120px]"><span className="absolute left-3 top-2.5 text-gray-500 pointer-events-none"><Icons.Filter className="w-4 h-4"/></span><input list="pos-cats" className="w-full pl-10 p-2 border rounded shadow-sm" placeholder="หมวดหมู่" value={selectedCategory==='ทั้งหมด'?'':selectedCategory} onChange={e=>setSelectedCategory(e.target.value||'ทั้งหมด')} onFocus={e=>e.target.select()}/><datalist id="pos-cats"><option value="ทั้งหมด"/>{categories.map(c=><option key={c} value={c}/>)}</datalist></div></div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">{posFiltered.map(item => (<div key={item.id} onClick={()=>addToCart(item)} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md cursor-pointer border border-transparent hover:border-blue-300 transition-all"><div className="flex justify-between items-start mb-2"><span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-600">{item.group}</span><span className={`text-[10px] px-2 py-0.5 rounded ${item.qty>0?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>{item.qty>0?`เหลือ ${item.qty}`:'หมด'}</span></div><div className="font-semibold text-gray-800 line-clamp-1">{item.name}</div><div className="text-xs text-gray-400 font-mono mb-1">{item.productId}</div><div className="text-lg font-bold text-blue-600">฿{item.price.toLocaleString()}</div></div>))}</div>
                                 </div>
                                 <div className="fixed bottom-0 left-0 w-full lg:static lg:w-96 bg-white border-t lg:border-l lg:border-t-0 shadow-xl lg:shadow-none flex flex-col h-[40vh] lg:h-full z-30">
                                     <div className="p-3 border-b bg-gray-50 flex justify-between font-bold text-gray-700"><span>ตะกร้า ({cart.length})</span>{cart.length>0&&<button onClick={()=>setCart([])} className="text-red-500 text-xs">ล้าง</button>}</div>
-                                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                                        {cart.map((item,idx) => (
-                                            <div key={idx} className="bg-slate-50 p-2 rounded border relative">
-                                                <div className="flex justify-between"><span className="font-medium text-sm">{item.name}</span><span className="font-bold">฿{((item.price*item.qty)-(item.itemDiscount||0)).toLocaleString()}</span></div>
-                                                <div className="text-xs text-gray-500 flex gap-2"><span>@{item.price}</span>{item.itemDiscount>0 && <span className="text-red-500">ลด {item.itemDiscount}</span>}</div>
-                                                <div className="flex justify-between items-center mt-2">
-                                                    <div className="flex items-center gap-1"><button onClick={()=>updateCartQty(idx,-1)} className="w-6 h-6 bg-white border rounded">-</button><span className="w-6 text-center text-sm">{item.qty}</span><button onClick={()=>updateCartQty(idx,1)} className="w-6 h-6 bg-white border rounded">+</button></div>
-                                                    <button onClick={()=>{setDiscountModal({show:true, index:idx, amount:item.itemDiscount||'', reason:item.itemDiscountReason||''})}} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded">ลดราคา</button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="p-4 border-t bg-white">
-                                        <div className="flex justify-between mb-3 text-lg font-bold"><span>รวม</span><span className="text-blue-600">฿{calculateTotal().toLocaleString()}</span></div>
-                                        <button onClick={()=>setShowCheckoutModal(true)} disabled={cart.length===0} className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold shadow-lg disabled:opacity-50">ชำระเงิน</button>
-                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-3 space-y-2">{cart.map((item,idx) => (<div key={idx} className="bg-slate-50 p-2 rounded border relative"><div className="flex justify-between"><span className="font-medium text-sm">{item.name}</span><span className="font-bold">฿{((item.price*item.qty)-(item.itemDiscount||0)).toLocaleString()}</span></div><div className="text-xs text-gray-500 flex gap-2"><span>@{item.price}</span>{item.itemDiscount>0 && <span className="text-red-500">ลด {item.itemDiscount}</span>}</div><div className="flex justify-between items-center mt-2"><div className="flex items-center gap-1"><button onClick={()=>updateCartQty(idx,-1)} className="w-6 h-6 bg-white border rounded">-</button><span className="w-6 text-center text-sm">{item.qty}</span><button onClick={()=>updateCartQty(idx,1)} className="w-6 h-6 bg-white border rounded">+</button></div><button onClick={()=>{openDiscountModal(idx)}} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded">ลดราคา</button></div></div>))}</div>
+                                    <div className="p-4 border-t bg-white"><div className="flex justify-between mb-3 text-lg font-bold"><span>รวม</span><span className="text-blue-600">฿{calculateCartTotal().toLocaleString()}</span></div><button onClick={()=>setShowCheckoutModal(true)} disabled={cart.length===0} className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold shadow-lg disabled:opacity-50">ชำระเงิน</button></div>
                                 </div>
                             </div>
                         )}
                         {activeTab === 'services' && (
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto p-6">
-                                <Card className="p-6"><div className="flex items-center gap-2 mb-6 text-orange-600 font-bold text-xl"><Wrench /> บริการรับซ่อม</div><div className="space-y-4"><input placeholder="รายการซ่อม" className="w-full p-3 border rounded-lg" value={repairData.name} onChange={e => setRepairData({...repairData, name: e.target.value})} /><div className="grid grid-cols-2 gap-4"><input type="number" placeholder="ต้นทุน" className="w-full p-3 border rounded-lg" value={repairData.cost} onChange={e => setRepairData({...repairData, cost: e.target.value})} /><input type="number" placeholder="ราคา" className="w-full p-3 border rounded-lg" value={repairData.price} onChange={e => setRepairData({...repairData, price: e.target.value})} /></div><Button onClick={handleAddRepair} className="w-full bg-orange-600 hover:bg-orange-700">บันทึก</Button></div></Card>
-                                <Card className="p-6"><div className="flex items-center gap-2 mb-6 text-green-600 font-bold text-xl"><Wifi /> บริการเติมเงิน</div><div className="space-y-4"><input placeholder="เบอร์โทร" className="w-full p-3 border rounded-lg" value={topupData.number} onChange={e => setTopupData({...topupData, number: e.target.value})} /><input type="number" placeholder="ยอดเงิน" className="w-full p-3 border rounded-lg" value={topupData.amount} onChange={e => setTopupData({...topupData, amount: e.target.value})} /><Button onClick={handleAddTopup} className="w-full bg-green-600 hover:bg-green-700">เติมเงิน</Button></div></Card>
+                                <Card className="p-6"><div className="flex items-center gap-2 mb-6 text-orange-600 font-bold text-xl"><Icons.Wrench /> บริการรับซ่อม</div><div className="space-y-4"><input placeholder="รายการซ่อม (เช่น เปลี่ยนจอ)" className="w-full p-3 border rounded-lg" value={repairData.name} onChange={e => setRepairData({...repairData, name: e.target.value})} /><div className="grid grid-cols-2 gap-4"><input type="number" className="w-full p-3 border rounded-lg" placeholder="ต้นทุน" value={repairData.cost} onChange={e => setRepairData({...repairData, cost: e.target.value})} /><input type="number" className="w-full p-3 border rounded-lg" placeholder="ราคา" value={repairData.price} onChange={e => setRepairData({...repairData, price: e.target.value})} /></div><Button onClick={handleAddRepair} className="w-full bg-orange-600 hover:bg-orange-700">บันทึก</Button></div></Card>
+                                <Card className="p-6"><div className="flex items-center gap-2 mb-6 text-green-600 font-bold text-xl"><Icons.Wifi /> บริการเติมเงิน</div><div className="space-y-4"><input placeholder="เบอร์โทร" className="w-full p-3 border rounded-lg" value={topupData.number} onChange={e => setTopupData({...topupData, number: e.target.value})} /><input type="number" className="w-full p-3 border rounded-lg" placeholder="ยอดเงิน" value={topupData.amount} onChange={e => setTopupData({...topupData, amount: e.target.value})} /><Button onClick={handleAddTopup} className="w-full bg-green-600 hover:bg-green-700">เติมเงิน</Button></div></Card>
                             </div>
                         )}
-                        {/* Installment & Report Views are omitted to keep file size manageable but Logic is included above */}
+                        {activeTab === 'installments' && (
+                            <div className="max-w-5xl mx-auto p-6">
+                                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4"><h2 className="text-2xl font-bold text-slate-800">ระบบฝากผ่อน</h2><div className="flex gap-2 w-full md:w-auto"><Button variant="outline" onClick={() => setInstallmentViewMode('import_stock')}><Icons.ArrowRightLeft className="w-4 h-4"/> ดึงจากร้าน</Button><Button onClick={() => setInstallmentViewMode('add_ext')}><Icons.Plus className="w-4 h-4"/> เพิ่มเครื่องนอก</Button></div></div>
+                                {installmentViewMode === 'list' && (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{partners.map(p => (<Card key={p.id} className="p-4 border-l-4" style={{ borderLeftColor: p.type === 'internal' ? '#ef4444' : '#a855f7' }}><div className="mb-4"><div className="flex justify-between mb-2"><span className={`px-2 py-1 rounded text-xs font-bold text-white ${p.type === 'internal' ? 'bg-red-500' : 'bg-purple-500'}`}>{p.type === 'internal' ? 'เครื่องร้าน' : 'เครื่องฝาก'}</span><span className="text-slate-400 text-xs">ID: {p.id}</span></div><h3 className="font-bold text-lg">{p.model}</h3><div className="text-sm text-slate-500 mb-2">เจ้าของ: {p.shop}</div>{p.revenueMode === 'commission' ? (<div className={`p-2 rounded text-sm mb-4 ${p.status==='waiting_owner' ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-purple-50 text-purple-700'}`}>{p.status==='waiting_owner' ? (<div className="font-bold flex items-center gap-1"><Icons.AlertCircle className="w-3 h-3"/> รอรับเงินจากผู้ฝาก</div>) : (<div>รูปแบบ: <b>กินคอมฯ {p.commission}%</b></div>)}{p.status==='waiting_owner' && (<div className="text-xs mt-1 opacity-80">ลูกค้าจ่ายแล้ว: {p.pendingAmount?.toLocaleString()}</div>)}</div>) : (<div className="bg-red-50 p-3 rounded text-sm mb-4 text-red-700"><div className="font-bold mb-2">รูปแบบ: รับเต็มจำนวน</div><div className="flex justify-between text-xs mb-1"><span>จ่ายแล้ว: {(p.paidAmount || 0).toLocaleString()}</span><span>คงเหลือ: {(p.price - (p.paidAmount || 0)).toLocaleString()}</span></div></div>)}</div><div className="flex gap-2 mt-auto"><Button onClick={() => setInstallmentPayModal({ show: true, partner: p, amount: '' })} variant={p.status==='waiting_owner' ? 'warning' : 'primary'} className={`flex-1 text-sm ${p.status==='waiting_owner' ? '' : p.type === 'internal' ? 'bg-red-600 hover:bg-red-700' : 'bg-purple-600 hover:bg-purple-700'}`}>{p.status==='waiting_owner' ? 'รับเงินจากผู้ฝาก' : 'รับเงิน'}</Button><Button variant="outline" onClick={() => confirmAction('ลบรายการ', 'ยืนยันการลบรายการนี้?', () => setPartners(partners.filter(x => x.id !== p.id)))} className="px-3"><Icons.Trash2 className="w-4 h-4"/></Button></div></Card>))}</div>)}
+                                {installmentViewMode === 'add_ext' && (<Card className="p-6 max-w-lg mx-auto"><h3 className="text-xl font-bold mb-4 text-purple-700 flex items-center gap-2"><Icons.Plus/> เพิ่มเครื่องนอก</h3><div className="space-y-3"><input className="w-full p-2 border rounded" placeholder="ชื่อร้าน/เจ้าของ" value={extForm.shop} onChange={e => setExtForm({...extForm, shop: e.target.value})} /><input className="w-full p-2 border rounded" placeholder="รุ่นสินค้า" value={extForm.model} onChange={e => setExtForm({...extForm, model: e.target.value})} /><div className="grid grid-cols-2 gap-2"><input className="w-full p-2 border rounded" type="number" placeholder="ราคาปล่อย" value={extForm.price} onChange={e => setExtForm({...extForm, price: e.target.value})} /><input className="w-full p-2 border rounded" type="number" placeholder="ต้นทุน" value={extForm.cost} onChange={e => setExtForm({...extForm, cost: e.target.value})} /></div><div className="border p-3 rounded-lg bg-slate-50"><label className="block text-sm font-bold mb-2">รูปแบบการรับเงิน</label><div className="flex gap-4 mb-2"><label className="flex items-center gap-2"><input type="radio" name="ext_mode" checked={extForm.mode === 'full'} onChange={() => setExtForm({...extForm, mode: 'full'})} /> รับเต็มจำนวน</label><label className="flex items-center gap-2"><input type="radio" name="ext_mode" checked={extForm.mode === 'commission'} onChange={() => setExtForm({...extForm, mode: 'commission'})} /> กินคอมมิชชั่น (%)</label></div>{extForm.mode === 'commission' && (<input className="w-full p-2 border rounded" type="number" placeholder="ระบุ % คอมมิชชั่น" value={extForm.commission} onChange={e => setExtForm({...extForm, commission: e.target.value})} />)}</div><div className="flex gap-2 pt-4"><Button onClick={() => setInstallmentViewMode('list')} variant="secondary" className="flex-1">ยกเลิก</Button><Button onClick={handleAddExternal} className="flex-1 bg-purple-600 hover:bg-purple-700">บันทึก</Button></div></div></Card>)}
+                                {installmentViewMode === 'import_stock' && (<Card className="p-6"><h3 className="text-xl font-bold mb-4 text-red-600 flex items-center gap-2"><Icons.ArrowRightLeft/> เลือกสินค้าจากสต็อก</h3><div className="grid grid-cols-1 md:grid-cols-3 gap-3">{inventory.filter(i => i.qty > 0).map(item => (<div key={item.id} onClick={() => setImportStockModal({ show: true, item, price: item.price, owner: 'ร้านเรา', mode: 'full', commission: '' })} className="border p-4 rounded-xl hover:bg-red-50 cursor-pointer"><div className="font-bold text-slate-800">{item.name}</div><div className="text-sm text-slate-500 mt-1">ทุน: {item.cost} | เหลือ: {item.qty}</div></div>))}</div><Button onClick={() => setInstallmentViewMode('list')} variant="secondary" className="mt-6">กลับ</Button></Card>)}
+                                {installmentPayModal.show && (<Modal title={installmentPayModal.partner?.revenueMode === 'commission' && installmentPayModal.partner?.status === 'waiting_owner' ? "รับเงินจากผู้ฝาก (ค่าคอม)" : "รับเงินจากลูกค้า"} onClose={() => setInstallmentPayModal({...installmentPayModal, show: false})}><input className="w-full p-3 border rounded mb-4" type="number" placeholder="จำนวนเงิน" value={installmentPayModal.amount} onChange={e => setInstallmentPayModal({...installmentPayModal, amount: e.target.value})} autoFocus /><Button onClick={confirmInstallmentPay} className="w-full">ยืนยัน</Button></Modal>)}
+                                {importStockModal.show && (<Modal title="ดึงจากสต็อก" onClose={() => setImportStockModal({...importStockModal, show: false})}><div className="space-y-4"><div className="p-3 bg-slate-50 rounded"><div className="font-bold">{importStockModal.item?.name}</div></div><input className="w-full p-2 border rounded" type="number" placeholder="ราคาปล่อย" value={importStockModal.price} onChange={e => setImportStockModal({...importStockModal, price: e.target.value})} /><input className="w-full p-2 border rounded" placeholder="ชื่อเจ้าของ" value={importStockModal.owner} onChange={e => setImportStockModal({...importStockModal, owner: e.target.value})} /><div className="border p-3 rounded"><label className="block text-sm font-bold mb-2">รูปแบบ</label><div className="flex gap-4"><label><input type="radio" checked={importStockModal.mode === 'full'} onChange={() => setImportStockModal({...importStockModal, mode: 'full'})} /> รับเต็ม</label><label><input type="radio" checked={importStockModal.mode === 'commission'} onChange={() => setImportStockModal({...importStockModal, mode: 'commission'})} /> กินคอมฯ</label></div>{importStockModal.mode === 'commission' && <input className="w-full p-2 border rounded mt-2" type="number" placeholder="%" value={importStockModal.commission} onChange={e => setImportStockModal({...importStockModal, commission: e.target.value})} />}</div><Button onClick={confirmImportStock} className="w-full bg-red-600 hover:bg-red-700">ยืนยัน</Button></div></Modal>)}
+                            </div>
+                        )}
+                        {activeTab === 'report' && (
+                            <div className="max-w-5xl mx-auto p-6">
+                                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">รายงานยอดขาย</h2><div className="flex bg-slate-100 p-1 rounded-lg">{(currentUser.role === 'staff' ? ['daily','monthly'] : ['daily','monthly','yearly']).map(p => (<button key={p} onClick={() => setReportPeriod(p)} className={`px-4 py-2 rounded-md text-sm ${reportPeriod === p ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}>{p === 'daily' ? 'วันนี้' : p === 'monthly' ? 'เดือนนี้' : 'ปีนี้'}</button>))}</div></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                    <div className="p-6 !bg-blue-600 rounded-xl text-white shadow-sm"><div className="text-blue-100">ยอดขายรวม</div><div className="text-3xl font-bold">฿{reportSummary.sales.toLocaleString()}</div><div className="text-xs mt-2 opacity-80">รวม: {reportSummary.sales.toLocaleString()} | เติมเงิน: {reportSummary.topupSales.toLocaleString()}</div></div>
+                                    {currentUser.role !== 'staff' && (<><div className="p-6 !bg-orange-500 rounded-xl text-white shadow-sm"><div className="text-orange-100">ยอดทุนรวม</div><div className="text-3xl font-bold">฿{reportSummary.cost.toLocaleString()}</div></div><div className="p-6 !bg-green-600 rounded-xl text-white shadow-sm"><div className="text-green-100">กำไรสุทธิ</div><div className="text-3xl font-bold">฿{reportSummary.profit.toLocaleString()}</div><div className="text-xs mt-2"><div>• ไม่รวมเติมเงิน: ฿{(reportSummary.profit - reportSummary.topupProfit).toLocaleString()}</div><div>• จากเติมเงิน: ฿{reportSummary.topupProfit.toLocaleString()}</div></div></div></>)}
+                                    <Card className="p-6 !bg-purple-600 text-white"><div className="text-purple-100">จำนวนบิล</div><div className="text-3xl font-bold">{reportSummary.count}</div></Card>
+                                </div>
+                                <div className="bg-white rounded-xl shadow border overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b text-slate-500"><th className="p-3">เวลา</th><th className="p-3">รายการ</th><th className="p-3 text-right">ยอดขาย</th>{currentUser.role!=='staff'&&<th className="p-3 text-right">กำไร</th>}<th className="p-3 text-center">ดูบิล</th></tr></thead><tbody>{reportSummary.filteredSales.slice().reverse().map(sale => (<tr key={sale.id} className="border-b hover:bg-slate-50"><td className="p-3 text-slate-500">{new Date(sale.date).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}</td><td className="p-3">{sale.items.map((i, idx) => <div key={idx} className="truncate max-w-[200px]">{i.name} x{i.qty}</div>)}</td><td className="p-3 text-right font-medium">฿{sale.total.toLocaleString()}</td>{currentUser.role!=='staff'&&<td className="p-3 text-right text-green-600 font-medium">+฿{sale.profit.toLocaleString()}</td>}<td className="p-3 text-center"><button onClick={() => setSaleDetailModal({ show: true, sale })} className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"><Icons.FileText className="w-4 h-4"/></button></td></tr>))}</tbody></table></div>
+                            </div>
+                        )}
+                        {activeTab === 'users' && (
+                             <div className="max-w-4xl mx-auto p-6"><div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">จัดการผู้ใช้</h2><Button onClick={() => { setUserForm({ permissions: [] }); setUserModal(true); }}><Icons.Plus className="w-4 h-4 mr-1"/> เพิ่มผู้ใช้</Button></div><div className="bg-white rounded-xl shadow overflow-hidden"><table className="w-full text-left"><thead className="bg-slate-50 border-b"><tr><th className="p-4">ชื่อ</th><th className="p-4">Username</th><th className="p-4">Role</th><th className="p-4">จัดการ</th></tr></thead><tbody>{users.map(u => (<tr key={u.id} className="border-b last:border-0 hover:bg-slate-50"><td className="p-4">{u.name}</td><td className="p-4 font-mono text-slate-500">{u.username}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs ${u.role==='admin'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'}`}>{u.role}</span></td><td className="p-4 flex gap-2"><button onClick={() => { setUserForm(u); setUserModal(true); }} className="text-blue-600 hover:bg-blue-100 p-2 rounded"><Icons.Edit className="w-4 h-4"/></button>{u.username !== 'admin' && <button onClick={() => confirmAction('ลบผู้ใช้', `ยืนยันลบ ${u.name}?`, () => setUsers(users.filter(user => user.id !== u.id)))} className="text-red-600 hover:bg-red-100 p-2 rounded"><Icons.Trash2 className="w-4 h-4"/></button>}</td></tr>))}</tbody></table></div>
+                             {userModal && (<Modal title={userForm.id ? "แก้ไขผู้ใช้" : "เพิ่มผู้ใช้"} onClose={() => setUserModal(false)}><div className="space-y-4"><input className="w-full p-2 border rounded" placeholder="ชื่อ-นามสกุล" value={userForm.name||''} onChange={e=>setUserForm({...userForm, name: e.target.value})} /><div className="grid grid-cols-2 gap-4"><input className="p-2 border rounded" placeholder="Username" value={userForm.username||''} onChange={e=>setUserForm({...userForm, username: e.target.value})} disabled={userForm.id && userForm.username==='admin'} /><input className="p-2 border rounded" placeholder="Password" value={userForm.password||''} onChange={e=>setUserForm({...userForm, password: e.target.value})} /></div><div><label className="block mb-2 font-medium">ระดับสิทธิ์ (Role)</label><div className="flex gap-4"><label className="flex items-center gap-2"><input type="radio" name="role" checked={userForm.role === 'admin'} onChange={() => setUserForm({ ...userForm, role: 'admin', permissions: ['all'] })} /> Admin (ทุกอย่าง)</label><label className="flex items-center gap-2"><input type="radio" name="role" checked={userForm.role === 'staff'} onChange={() => setUserForm({ ...userForm, role: 'staff', permissions: [] })} /> Staff (จำกัดสิทธิ์)</label></div></div>{userForm.role === 'staff' && (<div className="bg-slate-50 p-3 rounded border"><label className="block mb-2 text-sm font-medium text-slate-500">เลือกสิทธิ์การใช้งาน:</label><div className="grid grid-cols-2 gap-2">{Object.keys(PERMISSION_LABELS).map(key => (<label key={key} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={userForm.permissions?.includes(key)} onChange={() => togglePermission(key)} /> {PERMISSION_LABELS[key]}</label>))}</div></div>)}<Button onClick={handleUserSave} className="w-full">บันทึก</Button></div></Modal>)}</div>
+                        )}
                     </main>
 
-                    {/* Modals */}
-                    {showCheckoutModal && <Modal title="ชำระเงิน" onClose={() => setShowCheckoutModal(false)}><div className="text-center py-6 text-4xl font-bold text-blue-600">฿{calculateTotal().toLocaleString()}</div><Button onClick={() => handleCheckout(0, '')} className="w-full mt-4 py-3 text-lg">ยืนยัน</Button></Modal>}
-                    {categoryModal && (
-                        <Modal title="จัดการหมวดหมู่" onClose={()=>{setCategoryModal(false); setIsAddingCategory(false)}}>
-                            <div className="space-y-2">
-                                <div className="flex gap-2 mb-4">
-                                    <input className="flex-1 border p-2 rounded" placeholder={isAddingCategory?"ชื่อใหม่...":"ค้นหา..."} value={isAddingCategory?newCategoryName:catSearchQuery} onChange={e=>isAddingCategory?setNewCategoryName(e.target.value):setCatSearchQuery(e.target.value)}/>
-                                    <button onClick={()=>{if(isAddingCategory){handleAddCategory(newCategoryName);setNewCategoryName('');setIsAddingCategory(false)}else{setIsAddingCategory(true)}}} className={`px-3 rounded text-white ${isAddingCategory?'bg-green-600':'bg-blue-600'}`}>{isAddingCategory?'บันทึก':'เพิ่ม'}</button>
-                                    {isAddingCategory&&<button onClick={()=>setIsAddingCategory(false)} className="px-3 bg-gray-200 rounded">ยกเลิก</button>}
+                    {/* Common Modals */}
+                    {showCheckoutModal && <Modal title="ชำระเงิน" onClose={() => setShowCheckoutModal(false)}><div className="text-center py-6 text-4xl font-bold text-blue-600">฿{calculateCartTotal().toLocaleString()}</div><div className="space-y-2 mt-4"><label className="text-sm font-bold text-slate-700">ส่วนลดท้ายบิล</label><div className="flex gap-2"><input id="billDisc" type="number" className="p-2 border rounded flex-1" placeholder="บาท" /><input id="billReason" className="p-2 border rounded flex-1" placeholder="เหตุผล" /></div></div><Button onClick={() => handleCheckout(parseFloat(document.getElementById('billDisc').value)||0, document.getElementById('billReason').value)} className="w-full mt-4 py-3 text-lg">ยืนยัน</Button></Modal>}
+                    {discountModal.show && <Modal title="ส่วนลด" onClose={() => setDiscountModal({...discountModal, show: false})}><input type="number" className="w-full border p-2 mb-2" value={discountModal.amount} onChange={e => setDiscountModal({...discountModal, amount: e.target.value})} placeholder="จำนวนเงิน" /><input className="w-full border p-2 mb-4" value={discountModal.reason} onChange={e => setDiscountModal({...discountModal, reason: e.target.value})} placeholder="เหตุผล" /><Button onClick={saveDiscount} className="w-full">บันทึก</Button></Modal>}
+                    {/* Bill Detail Modal Logic with Role Check */}
+                    {saleDetailModal.show && saleDetailModal.sale && (
+                        <Modal title="รายละเอียดบิลการขาย" onClose={() => setSaleDetailModal({ show: false, sale: null })}>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-start border-b pb-4"><div><div className="text-sm text-slate-500">เลขที่บิล</div><div className="font-mono font-bold text-slate-700">{saleDetailModal.sale.id}</div></div><div className="text-right"><div className="text-sm text-slate-500">วันที่</div><div className="font-medium">{new Date(saleDetailModal.sale.date).toLocaleString('th-TH')}</div></div></div>
+                                <div className="bg-slate-50 rounded-lg p-3"><table className="w-full text-sm"><thead><tr className="text-slate-500 border-b"><th className="text-left pb-2">รายการ</th><th className="text-center pb-2">จำนวน</th><th className="text-right pb-2">รวม</th></tr></thead><tbody>{saleDetailModal.sale.items.map((item, idx) => (<tr key={idx} className="border-b last:border-0 border-slate-100"><td className="py-2"><div className="font-medium">{item.name}</div><div className="text-xs text-slate-500 flex flex-wrap gap-2 mt-1">
+                                    {/* Hide Cost for Staff */}
+                                    {currentUser.role !== 'staff' && <span>ทุน: {(item.cost || 0).toLocaleString()} | </span>}
+                                    <span>ขาย: {item.price.toLocaleString()}</span></div>{item.itemDiscount > 0 && (<div className="text-xs text-red-500">ส่วนลด: -{item.itemDiscount.toLocaleString()} ({item.itemDiscountReason})</div>)}
+                                    {/* Hide Profit for Staff */}
+                                    {currentUser.role !== 'staff' && <div className="text-xs text-green-600 font-medium mt-1">กำไร: +{(( (item.price - (item.cost || 0)) * item.qty ) - (item.itemDiscount || 0)).toLocaleString()}</div>}
+                                    </td><td className="py-2 text-center align-top text-slate-600">x{item.qty}</td><td className="py-2 text-right align-top font-medium">{((item.price * item.qty) - (item.itemDiscount || 0)).toLocaleString()}</td></tr>))}</tbody></table></div>
+                                <div className="space-y-2 pt-2">
+                                    {/* Hide Cost Summary for Staff */}
+                                    {currentUser.role !== 'staff' && (
+                                        <div className="flex justify-between text-orange-500 text-xs"><span>ยอดรวมต้นทุน</span><span>{saleDetailModal.sale.items.reduce((acc, item) => acc + ((item.cost || 0) * item.qty), 0).toLocaleString()}</span></div>
+                                    )}
+                                    <div className="flex justify-between text-slate-600"><span>ยอดรวมสินค้า (ขาย)</span><span>{saleDetailModal.sale.subtotal.toLocaleString()}</span></div>{saleDetailModal.sale.billDiscount > 0 && (<div className="flex justify-between text-red-600"><span>ส่วนลดท้ายบิล ({saleDetailModal.sale.billDiscountReason})</span><span>-{saleDetailModal.sale.billDiscount.toLocaleString()}</span></div>)}<div className="flex justify-between text-xl font-bold text-blue-600 border-t pt-2"><span>ยอดสุทธิ</span><span>฿{saleDetailModal.sale.total.toLocaleString()}</span></div>
+                                    {/* Hide Net Profit for Staff */}
+                                    {currentUser.role !== 'staff' && (
+                                        <div className="flex justify-between text-sm text-green-600 bg-green-50 p-2 rounded"><span>กำไรจากบิลนี้</span><span>+฿{saleDetailModal.sale.profit.toLocaleString()}</span></div>
+                                    )}
                                 </div>
-                                <div className="max-h-60 overflow-y-auto space-y-1">
-                                    {categories.filter(c=>c.toLowerCase().includes(catSearchQuery.toLowerCase())).map((c,idx)=>(
-                                        <div key={idx} className="flex justify-between items-center p-2 bg-slate-50 rounded">
-                                            {editingCatIndex===idx ? (
-                                                <div className="flex gap-1 flex-1"><input className="border p-1 rounded flex-1" value={editingCatName} onChange={e=>setEditingCatName(e.target.value)} /><button onClick={()=>handleUpdateCategory(idx, editingCatName)} className="text-green-600"><Check size={16}/></button></div>
-                                            ) : (<span>{c}</span>)}
-                                            {editingCatIndex!==idx && (
-                                                <div className="flex gap-2">
-                                                    <button onClick={()=>{setEditingCatIndex(idx);setEditingCatName(c)}} className="text-blue-500"><Edit size={14}/></button>
-                                                    {deleteConfirmIndex===idx ? <button onClick={()=>handleRemoveCategory(idx)} className="text-red-600 text-xs bg-red-100 px-1 rounded">ยืนยัน?</button> : <button onClick={()=>setDeleteConfirmIndex(idx)} className="text-red-500"><Trash2 size={14}/></button>}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                                <div className="pt-4 flex gap-2"><Button variant="outline" className="flex-1" onClick={() => setSaleDetailModal({ show: false, sale: null })}>ปิด</Button><Button className="flex-1" onClick={() => window.print()}><Icons.Printer className="w-4 h-4"/> พิมพ์</Button></div>
                             </div>
                         </Modal>
                     )}
-                    {discountModal.show && <Modal title="ส่วนลด" onClose={() => setDiscountModal({...discountModal, show: false})}><input type="number" className="w-full border p-2 mb-2" value={discountModal.amount} onChange={e => setDiscountModal({...discountModal, amount: e.target.value})} placeholder="จำนวนเงิน" /><input className="w-full border p-2 mb-4" value={discountModal.reason} onChange={e => setDiscountModal({...discountModal, reason: e.target.value})} placeholder="เหตุผล" /><Button onClick={saveDiscount} className="w-full">บันทึก</Button></Modal>}
+                    {notification && <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}
+                    {confirmData && <ConfirmModal title={confirmData.title} message={confirmData.message} onConfirm={confirmData.onConfirm} onCancel={() => setConfirmData(null)} />}
                 </div>
             );
         }
