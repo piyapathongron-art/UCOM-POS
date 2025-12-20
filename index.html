@@ -49,9 +49,10 @@
             { id: 2, name: 'พนักงานขาย', username: 'staff', password: '1234', role: 'staff', permissions: ['pos', 'services', 'report'] }
         ];
 
+        // Added 'audit' to permissions
         const PERMISSION_LABELS = {
             'pos': 'ขายหน้าร้าน', 'services': 'บริการ', 'installments': 'ฝากผ่อน',
-            'stock': 'จัดการสต็อก', 'report': 'รายงาน', 'users': 'จัดการผู้ใช้'
+            'stock': 'จัดการสต็อก', 'report': 'รายงาน', 'users': 'จัดการผู้ใช้', 'audit': 'ประวัติการใช้งาน'
         };
 
         const parseNum = (val) => {
@@ -92,7 +93,8 @@
             Shield: () => <Icon><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></Icon>,
             Settings: () => <Icon><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>,
             Sheet: () => <Icon><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></Icon>,
-            Box: () => <Icon><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></Icon>
+            Box: () => <Icon><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></Icon>,
+            History: () => <Icon><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></Icon>
         };
 
         // --- UI Components ---
@@ -182,6 +184,7 @@
             const [salesLog, setSalesLog] = useState([]);
             const [categories, setCategories] = useState(INITIAL_CATEGORIES);
             const [users, setUsers] = useState(INITIAL_USERS);
+            const [auditLogs, setAuditLogs] = useState([]);
             
             // UI
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -233,11 +236,13 @@
                     const savedPartners = localStorage.getItem('pos_partners');
                     const savedCats = localStorage.getItem('pos_categories');
                     const savedUsers = localStorage.getItem('pos_users');
+                    const savedAudit = localStorage.getItem('pos_audit_logs');
                     if(savedInv) setInventory(JSON.parse(savedInv) || INITIAL_STOCK);
                     if(savedSales) setSalesLog(JSON.parse(savedSales) || []);
                     if(savedPartners) setPartners(JSON.parse(savedPartners) || []);
                     if(savedCats) setCategories(JSON.parse(savedCats) || INITIAL_CATEGORIES);
                     if(savedUsers) setUsers(JSON.parse(savedUsers) || INITIAL_USERS);
+                    if(savedAudit) setAuditLogs(JSON.parse(savedAudit) || []);
                 } catch (e) { console.error("Data load error", e); }
             }, []);
 
@@ -248,7 +253,20 @@
                 localStorage.setItem('pos_partners', JSON.stringify(partners));
                 localStorage.setItem('pos_categories', JSON.stringify(categories));
                 localStorage.setItem('pos_users', JSON.stringify(users));
-            }, [inventory, salesLog, partners, categories, users]);
+                localStorage.setItem('pos_audit_logs', JSON.stringify(auditLogs));
+            }, [inventory, salesLog, partners, categories, users, auditLogs]);
+
+            // --- Audit Log Helper ---
+            const logAction = (action, details, userOverride = null) => {
+                const newLog = {
+                    id: Date.now(),
+                    timestamp: new Date().toISOString(),
+                    action: action,
+                    details: details,
+                    user: userOverride ? userOverride : (currentUser ? currentUser.username : 'Unknown')
+                };
+                setAuditLogs(prev => [newLog, ...prev]);
+            };
 
             // Safe Date Parsing
             const getSafeDate = (dateStr) => {
@@ -402,9 +420,20 @@
             
             const handleLogin = (u, p) => {
                 const user = users.find(user => user.username === u && user.password === p);
-                if(user) { setCurrentUser(user); if(user.role==='admin'||user.permissions.includes('pos')) setActiveTab('pos'); else if(user.permissions.length>0) setActiveTab(user.permissions[0]); } else showNotif('รหัสผิด', 'error');
+                if(user) { 
+                    setCurrentUser(user);
+                    logAction('เข้าสู่ระบบ', `ผู้ใช้ ${user.username} เข้าสู่ระบบ`, user.username);
+                    if(user.role==='admin'||user.permissions.includes('pos')) setActiveTab('pos'); 
+                    else if(user.permissions.length>0) setActiveTab(user.permissions[0]); 
+                } else {
+                    showNotif('รหัสผิด', 'error');
+                }
             };
-            const handleLogout = () => { setCurrentUser(null); setCart([]); };
+            const handleLogout = () => { 
+                logAction('ออกจากระบบ', `ผู้ใช้ ${currentUser.username} ออกจากระบบ`);
+                setCurrentUser(null); 
+                setCart([]); 
+            };
             const hasPermission = (perm) => {
                 if (!currentUser) return false;
                 if (currentUser.role === 'admin' || currentUser.permissions.includes('all')) return true;
@@ -430,12 +459,37 @@
                 const maxId = pIds.length > 0 ? Math.max(...pIds) : 0;
                 setStockFormData(prev => ({ ...prev, productId: 'P-' + (maxId + 1).toString().padStart(5, '0') }));
             };
+
             const handleStockSave = () => {
                 const categoryName = stockFormData.group ? stockFormData.group.trim() : 'ทั่วไป';
                 if (!categories.includes(categoryName) && categoryName !== '') setCategories(prev => [...prev, categoryName]);
                 const newItem = { ...stockFormData, group: categoryName, qty: parseNum(stockFormData.qty), cost: parseNum(stockFormData.cost), price: parseNum(stockFormData.price) };
-                if (stockEditId === 'new') setInventory([...inventory, { ...newItem, id: Date.now() }]);
-                else setInventory(inventory.map(i => i.id === stockEditId ? newItem : i));
+                
+                if (stockEditId === 'new') {
+                    setInventory([...inventory, { ...newItem, id: Date.now() }]);
+                    // Detailed Log for New Item
+                    logAction('เพิ่มสินค้า', `เพิ่มสินค้าใหม่: ${newItem.name} (จำนวน: ${newItem.qty}, ทุน: ${newItem.cost}, ราคา: ${newItem.price})`);
+                } else {
+                    // Detailed Log for Edit Item (Before -> After)
+                    const oldItem = inventory.find(i => i.id === stockEditId);
+                    let changes = [];
+                    if (oldItem) {
+                        if (oldItem.name !== newItem.name) changes.push(`ชื่อ: "${oldItem.name}" -> "${newItem.name}"`);
+                        if (oldItem.qty !== newItem.qty) changes.push(`คงเหลือ: ${oldItem.qty} -> ${newItem.qty}`);
+                        if (oldItem.price !== newItem.price) changes.push(`ราคา: ${oldItem.price} -> ${newItem.price}`);
+                        if (oldItem.cost !== newItem.cost) changes.push(`ทุน: ${oldItem.cost} -> ${newItem.cost}`);
+                        if (oldItem.group !== newItem.group) changes.push(`หมวด: "${oldItem.group}" -> "${newItem.group}"`);
+                        if (oldItem.productId !== newItem.productId) changes.push(`รหัส: "${oldItem.productId}" -> "${newItem.productId}"`);
+                    }
+
+                    setInventory(inventory.map(i => i.id === stockEditId ? newItem : i));
+                    
+                    const logDetail = changes.length > 0 
+                        ? `${newItem.name} | มีการแก้ไข: ${changes.join(', ')}` 
+                        : `แก้ไขสินค้า: ${newItem.name} (กดบันทึกโดยไม่มีการเปลี่ยนแปลงข้อมูล)`;
+                    
+                    logAction('แก้ไขสินค้า', logDetail);
+                }
                 setStockEditId(null); showNotif('บันทึกสำเร็จ');
             };
 
@@ -454,6 +508,7 @@
                 const newInv = inventory.map(item => item.group === oldName ? { ...item, group: newName } : item);
                 setInventory(newInv);
 
+                logAction('แก้ไขหมวดหมู่', `เปลี่ยนชื่อหมวดหมู่จาก "${oldName}" -> "${newName}"`);
                 setEditCatIndex(-1);
                 showNotif('แก้ไขชื่อหมวดหมู่สำเร็จ');
             };
@@ -464,12 +519,14 @@
 
                 confirmAction('ลบหมวดหมู่', `สินค้าในหมวด "${catName}" จะถูกย้ายไป "ทั่วไป" ยืนยัน?`, () => {
                     // Move products to 'ทั่วไป'
+                    const itemsToMove = inventory.filter(item => item.group === catName).length;
                     const newInv = inventory.map(item => item.group === catName ? { ...item, group: 'ทั่วไป' } : item);
                     setInventory(newInv);
 
                     // Remove category
                     const newCats = categories.filter((_, i) => i !== index);
                     setCategories(newCats);
+                    logAction('ลบหมวดหมู่', `ลบหมวดหมู่ "${catName}" (ย้ายสินค้า ${itemsToMove} รายการ ไปยังหมวด "ทั่วไป")`);
                     showNotif('ลบหมวดหมู่แล้ว');
                 });
             };
@@ -536,7 +593,10 @@
                     if(c.partnerId) { const idx = newPartners.findIndex(p => p.id === c.partnerId); if(idx !== -1) { if(c.installmentType === 'full') newPartners[idx].paidAmount = (newPartners[idx].paidAmount||0) + c.price; if(c.installmentType === 'commission') newPartners[idx].isFinished = true; } }
                 });
                 newPartners = newPartners.filter(p => !(p.isFinished || (p.revenueMode==='full' && (p.price - (p.paidAmount||0)) <= 0)));
-                setInventory(newInv); setPartners(newPartners); setSalesLog([...salesLog, saleRecord]); setCart([]); setShowCheckoutModal(false); showNotif('บันทึกการขายสำเร็จ');
+                setInventory(newInv); setPartners(newPartners); setSalesLog([...salesLog, saleRecord]); setCart([]); setShowCheckoutModal(false); 
+                
+                logAction('ขายสินค้า', `บิล #${saleRecord.id} ยอดรวม: ${netTotal.toLocaleString()} บาท (${saleRecord.items.length} รายการ)`);
+                showNotif('บันทึกการขายสำเร็จ');
             };
             const confirmImportStock = () => {
                 const { item, price, owner, mode, commission } = importStockModal;
@@ -549,6 +609,7 @@
                     commission: parseNum(commission), paidAmount: 0, status: 'normal'
                 }]);
                 setImportStockModal({ show: false, item: null, price: '', owner: 'ร้านเรา', mode: 'full', commission: '' });
+                logAction('ดึงสินค้าฝาก', `ดึง ${item.name} จากสต็อกไปฝากขาย (ราคา: ${price})`);
                 showNotif('ดึงสินค้าสำเร็จ');
             };
             const handleAddExternal = () => {
@@ -559,6 +620,7 @@
                     commission: parseNum(extForm.commission), revenueMode: extForm.mode,
                     paidAmount: 0, status: 'normal'
                 }]);
+                logAction('เพิ่มเครื่องฝาก', `เพิ่มเครื่องนอก: ${extForm.model} (ร้าน: ${extForm.shop})`);
                 setExtForm({ shop: '', model: '', price: '', cost: '', mode: 'commission', commission: '' });
                 showNotif('เพิ่มเครื่องนอกสำเร็จ');
             };
@@ -581,7 +643,22 @@
             };
             const handleUserSave = () => {
                 if(!userForm.username || !userForm.password) return showNotif('กรอกข้อมูลไม่ครบ', 'error');
-                if(userForm.id) setUsers(users.map(u => u.id === userForm.id ? userForm : u)); else setUsers([...users, { ...userForm, id: Date.now() }]);
+                if(userForm.id) {
+                    // Log User Changes
+                    const oldUser = users.find(u => u.id === userForm.id);
+                    let changes = [];
+                    if (oldUser) {
+                        if (oldUser.role !== userForm.role) changes.push(`Role: ${oldUser.role} -> ${userForm.role}`);
+                        if (oldUser.password !== userForm.password) changes.push(`เปลี่ยนรหัสผ่าน`);
+                        if (JSON.stringify(oldUser.permissions) !== JSON.stringify(userForm.permissions)) changes.push(`สิทธิ์การใช้งานเปลี่ยน`);
+                    }
+                    
+                    setUsers(users.map(u => u.id === userForm.id ? userForm : u));
+                    logAction('แก้ไขผู้ใช้', `แก้ไขข้อมูลผู้ใช้ ${userForm.username}: ${changes.join(', ') || 'ไม่มีการเปลี่ยนแปลง'}`);
+                } else {
+                    setUsers([...users, { ...userForm, id: Date.now() }]);
+                    logAction('เพิ่มผู้ใช้', `เพิ่มผู้ใช้ใหม่: ${userForm.username} (Role: ${userForm.role})`);
+                }
                 setUserModal(false);
             };
             const togglePermission = (perm) => {
@@ -591,15 +668,30 @@
                 setUserForm({ ...userForm, permissions: newPerms });
             };
             const handleExportData = () => {
-                const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ inventory, salesLog, partners, categories, users }));
+                const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ inventory, salesLog, partners, categories, users, auditLogs }));
                 const a = document.createElement('a'); a.href = data; a.download = "backup.json"; a.click();
+                logAction('สำรองข้อมูล', 'ทำการ Backup ข้อมูลทั้งหมด');
             };
             const handleImportData = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
                 const r = new FileReader();
                 r.onload = (ev) => {
-                    try { const d = JSON.parse(ev.target.result); if(d.inventory) { confirmAction('กู้คืนข้อมูล', 'การกู้คืนจะทับข้อมูลปัจจุบันทั้งหมด ยืนยันหรือไม่?', () => { setInventory(d.inventory); setSalesLog(d.salesLog); setPartners(d.partners); setCategories(d.categories); if(d.users) setUsers(d.users); showNotif('กู้คืนสำเร็จ'); }); } } catch(err) { showNotif('ไฟล์เสียหาย', 'error'); }
+                    try { 
+                        const d = JSON.parse(ev.target.result); 
+                        if(d.inventory) { 
+                            confirmAction('กู้คืนข้อมูล', 'การกู้คืนจะทับข้อมูลปัจจุบันทั้งหมด ยืนยันหรือไม่?', () => { 
+                                setInventory(d.inventory); 
+                                setSalesLog(d.salesLog); 
+                                setPartners(d.partners); 
+                                setCategories(d.categories); 
+                                if(d.users) setUsers(d.users);
+                                if(d.auditLogs) setAuditLogs(d.auditLogs); // Restore Audit Logs too
+                                logAction('กู้คืนข้อมูล', 'ทำการ Restore ข้อมูลจากไฟล์');
+                                showNotif('กู้คืนสำเร็จ'); 
+                            }); 
+                        } 
+                    } catch(err) { showNotif('ไฟล์เสียหาย', 'error'); }
                 };
                 r.readAsText(file);
                 e.target.value = null;
@@ -703,6 +795,7 @@
                 if (finalColumns.length === 0) return showNotif('กรุณาเลือกอย่างน้อย 1 คอลัมน์', 'error');
                 
                 exportToCSV(exportSettings.data, exportSettings.filename, finalColumns);
+                logAction('Export CSV', `Export ข้อมูล: ${exportSettings.filename}`);
                 setExportModalOpen(false);
                 showNotif('Export CSV สำเร็จ');
             };
@@ -714,8 +807,49 @@
 
             const renderUsersView = () => (
                 <div className="max-w-4xl mx-auto p-6">
-                    <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">จัดการผู้ใช้</h2><Button onClick={() => { setUserForm({ permissions: [] }); setUserModal(true); }}><Icons.Plus className="w-4 h-4 mr-1"/> เพิ่มผู้ใช้</Button></div><div className="bg-white rounded-xl shadow overflow-hidden"><table className="w-full text-left"><thead className="bg-slate-50 border-b"><tr><th className="p-4">ชื่อ</th><th className="p-4">Username</th><th className="p-4">Role</th><th className="p-4">จัดการ</th></tr></thead><tbody>{users.map(u => (<tr key={u.id} className="border-b last:border-0 hover:bg-slate-50"><td className="p-4">{u.name}</td><td className="p-4 font-mono text-slate-500">{u.username}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs ${u.role==='admin'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'}`}>{u.role}</span></td><td className="p-4 flex gap-2"><button onClick={() => { setUserForm(u); setUserModal(true); }} className="text-blue-600 hover:bg-blue-100 p-2 rounded"><Icons.Edit className="w-4 h-4"/></button>{u.username !== 'admin' && <button onClick={() => confirmAction('ลบผู้ใช้', `ยืนยันลบ ${u.name}?`, () => setUsers(users.filter(user => user.id !== u.id)))} className="text-red-600 hover:bg-red-100 p-2 rounded"><Icons.Trash2 className="w-4 h-4"/></button>}</td></tr>))}</tbody></table></div>
+                    <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">จัดการผู้ใช้</h2><Button onClick={() => { setUserForm({ permissions: [] }); setUserModal(true); }}><Icons.Plus className="w-4 h-4 mr-1"/> เพิ่มผู้ใช้</Button></div><div className="bg-white rounded-xl shadow overflow-hidden"><table className="w-full text-left"><thead className="bg-slate-50 border-b"><tr><th className="p-4">ชื่อ</th><th className="p-4">Username</th><th className="p-4">Role</th><th className="p-4">จัดการ</th></tr></thead><tbody>{users.map(u => (<tr key={u.id} className="border-b last:border-0 hover:bg-slate-50"><td className="p-4">{u.name}</td><td className="p-4 font-mono text-slate-500">{u.username}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs ${u.role==='admin'?'bg-purple-100 text-purple-700':'bg-blue-100 text-blue-700'}`}>{u.role}</span></td><td className="p-4 flex gap-2"><button onClick={() => { setUserForm(u); setUserModal(true); }} className="text-blue-600 hover:bg-blue-100 p-2 rounded"><Icons.Edit className="w-4 h-4"/></button>{u.username !== 'admin' && <button onClick={() => confirmAction('ลบผู้ใช้', `ยืนยันลบ ${u.name}?`, () => { setUsers(users.filter(user => user.id !== u.id)); logAction('ลบผู้ใช้', `ลบผู้ใช้: ${u.username}`); })} className="text-red-600 hover:bg-red-100 p-2 rounded"><Icons.Trash2 className="w-4 h-4"/></button>}</td></tr>))}</tbody></table></div>
                     {userModal && (<Modal title={userForm.id ? "แก้ไขผู้ใช้" : "เพิ่มผู้ใช้"} onClose={() => setUserModal(false)}><div className="space-y-4"><input className="w-full p-2 border rounded" placeholder="ชื่อ-นามสกุล" value={userForm.name||''} onChange={e=>setUserForm({...userForm, name: e.target.value})} /><div className="grid grid-cols-2 gap-4"><input className="p-2 border rounded" placeholder="Username" value={userForm.username||''} onChange={e=>setUserForm({...userForm, username: e.target.value})} disabled={userForm.id && userForm.username==='admin'} /><input className="p-2 border rounded" placeholder="Password" value={userForm.password||''} onChange={e=>setUserForm({...userForm, password: e.target.value})} /></div><div><label className="block mb-2 font-medium">ระดับสิทธิ์ (Role)</label><div className="flex gap-4"><label className="flex items-center gap-2"><input type="radio" name="role" checked={userForm.role === 'admin'} onChange={() => setUserForm({ ...userForm, role: 'admin', permissions: ['all'] })} /> Admin (ทุกอย่าง)</label><label className="flex items-center gap-2"><input type="radio" name="role" checked={userForm.role === 'staff'} onChange={() => setUserForm({ ...userForm, role: 'staff', permissions: [] })} /> Staff (จำกัดสิทธิ์)</label></div></div>{userForm.role === 'staff' && (<div className="bg-slate-50 p-3 rounded border"><label className="block mb-2 text-sm font-medium text-slate-500">เลือกสิทธิ์การใช้งาน:</label><div className="grid grid-cols-2 gap-2">{Object.keys(PERMISSION_LABELS).map(key => (<label key={key} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={userForm.permissions?.includes(key)} onChange={() => togglePermission(key)} /> {PERMISSION_LABELS[key]}</label>))}</div></div>)}<Button onClick={handleUserSave} className="w-full">บันทึก</Button></div></Modal>)}
+                </div>
+            );
+
+            // --- Audit Log View ---
+            const renderAuditLogView = () => (
+                <div className="max-w-6xl mx-auto p-4 md:p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold flex items-center gap-2"><Icons.History className="text-slate-600"/> ประวัติการใช้งาน (Audit Log)</h2>
+                        <div className="text-sm text-slate-500">รายการทั้งหมด: {auditLogs.length}</div>
+                    </div>
+                    <div className="bg-white rounded-xl shadow overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 border-b">
+                                    <tr>
+                                        <th className="p-4 w-40">เวลา</th>
+                                        <th className="p-4 w-32">ผู้ใช้</th>
+                                        <th className="p-4 w-40">กิจกรรม</th>
+                                        <th className="p-4">รายละเอียด</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {auditLogs.slice(0, 100).map(log => (
+                                        <tr key={log.id} className="border-b last:border-0 hover:bg-slate-50">
+                                            <td className="p-4 text-sm text-slate-500 font-mono whitespace-nowrap">
+                                                {new Date(log.timestamp).toLocaleString('th-TH')}
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-bold">{log.user}</span>
+                                            </td>
+                                            <td className="p-4 font-medium text-blue-600">{log.action}</td>
+                                            <td className="p-4 text-slate-600 text-sm">{log.details}</td>
+                                        </tr>
+                                    ))}
+                                    {auditLogs.length === 0 && (
+                                        <tr><td colSpan="4" className="p-8 text-center text-slate-400">ยังไม่มีประวัติการใช้งาน</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             );
 
@@ -742,7 +876,7 @@
                         </div>
                     </div>
                     <div className="mb-6 flex flex-col md:flex-row gap-2"><div className="relative flex-1"><span className="absolute left-3 top-2.5 text-slate-400"><Icons.Search className="w-4 h-4"/></span><input className="w-full pl-10 p-2 border rounded" placeholder="ค้นหา (ชื่อ/รหัส)..." value={stockSearchQuery} onChange={e => setStockSearchQuery(e.target.value)} /></div><div className="relative w-full md:w-1/3 min-w-[200px]"><div className="absolute left-3 top-3 text-slate-500 pointer-events-none"><Icons.Filter size={18} /></div><input list="stock-category-list" type="text" className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700 font-medium" placeholder="หมวดหมู่..." value={stockSelectedCategory === 'ทั้งหมด' ? '' : stockSelectedCategory} onChange={e => setStockSelectedCategory(e.target.value || 'ทั้งหมด')} onFocus={(e) => e.target.select()} /><datalist id="stock-category-list"><option value="ทั้งหมด">ทั้งหมด</option>{categories.map(c => <option key={c} value={c} />)}</datalist></div></div>
-                    <div className="bg-white rounded shadow overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-slate-50 border-b"><tr><th className="p-3">ID</th><th className="p-3">หมวด</th><th className="p-3">ชื่อสินค้า</th><th className="p-3 text-center">คงเหลือ</th><th className="p-3 text-right">ทุน</th><th className="p-3 text-right">ขาย</th><th className="p-3 text-center">จัดการ</th></tr></thead><tbody>{stockFiltered.map(item => (<tr key={item.id} className="hover:bg-slate-50 border-b last:border-0"><td className="p-3 text-xs text-slate-400 font-mono">{item.productId || '-'}</td><td className="p-3 text-sm text-slate-500">{item.group}</td><td className="p-3 font-medium">{item.name}</td><td className="p-3 text-center"><span className={`px-2 py-1 rounded-full text-xs ${item.qty>0?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}`}>{item.qty}</span></td><td className="p-3 text-right">{item.cost.toLocaleString()}</td><td className="p-3 text-right font-bold text-blue-600">{item.price.toLocaleString()}</td><td className="p-3 flex justify-center gap-2"><button onClick={() => { setStockEditId(item.id); setStockFormData(item); }} className="p-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"><Icons.Edit className="w-4 h-4"/></button><button onClick={() => confirmAction('ลบสินค้า', `ต้องการลบ ${item.name}?`, () => setInventory(inventory.filter(x=>x.id!==item.id)))} className="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100"><Icons.Trash2 className="w-4 h-4"/></button></td></tr>))}</tbody></table></div>
+                    <div className="bg-white rounded shadow overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-slate-50 border-b"><tr><th className="p-3">ID</th><th className="p-3">หมวด</th><th className="p-3">ชื่อสินค้า</th><th className="p-3 text-center">คงเหลือ</th><th className="p-3 text-right">ทุน</th><th className="p-3 text-right">ขาย</th><th className="p-3 text-center">จัดการ</th></tr></thead><tbody>{stockFiltered.map(item => (<tr key={item.id} className="hover:bg-slate-50 border-b last:border-0"><td className="p-3 text-xs text-slate-400 font-mono">{item.productId || '-'}</td><td className="p-3 text-sm text-slate-500">{item.group}</td><td className="p-3 font-medium">{item.name}</td><td className="p-3 text-center"><span className={`px-2 py-1 rounded-full text-xs ${item.qty>0?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}`}>{item.qty}</span></td><td className="p-3 text-right">{item.cost.toLocaleString()}</td><td className="p-3 text-right font-bold text-blue-600">{item.price.toLocaleString()}</td><td className="p-3 flex justify-center gap-2"><button onClick={() => { setStockEditId(item.id); setStockFormData(item); }} className="p-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"><Icons.Edit className="w-4 h-4"/></button><button onClick={() => confirmAction('ลบสินค้า', `ต้องการลบ ${item.name}?`, () => { setInventory(inventory.filter(x=>x.id!==item.id)); logAction('ลบสินค้า', `ลบสินค้า: ${item.name}`); })} className="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100"><Icons.Trash2 className="w-4 h-4"/></button></td></tr>))}</tbody></table></div>
                     {stockEditId && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><Card className="w-full max-w-md p-6"><h3 className="text-xl font-bold mb-4">{stockEditId === 'new' ? 'เพิ่มสินค้าใหม่' : 'แก้ไขสินค้า'}</h3><div className="space-y-4">
                         <div><label className="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่ (เลือกหรือพิมพ์ใหม่)</label><input list="cat-options" className="w-full p-2 border rounded bg-white" value={stockFormData.group} onChange={e=>setStockFormData({...stockFormData, group: e.target.value})} placeholder="ระบุหมวดหมู่..." /><datalist id="cat-options">{categories.map(c => <option key={c} value={c} />)}</datalist></div>
                         <div><label className="block text-sm font-medium text-gray-700 mb-1">รหัสสินค้า / Barcode</label><div className="flex gap-2"><input className="flex-1 p-2 border rounded" placeholder="ยิงบาร์โค้ด หรือ พิมพ์รหัส" value={stockFormData.productId||''} onChange={e=>setStockFormData({...stockFormData, productId: e.target.value})}/><Button variant="secondary" onClick={generateID} className="px-3 text-xs">Auto</Button></div></div>
@@ -780,6 +914,7 @@
                                         if(val && !categories.includes(val)) {
                                             setCategories([...categories, val]);
                                             e.target.reset();
+                                            logAction('เพิ่มหมวดหมู่', `เพิ่มหมวดหมู่ใหม่: ${val}`);
                                             showNotif('เพิ่มหมวดหมู่แล้ว');
                                         }
                                     }} className="flex gap-2">
@@ -1047,16 +1182,16 @@
                     <aside className="hidden md:flex flex-col w-64 bg-white border-r shadow-sm z-20">
                         <div className="p-6 border-b"><h1 className="text-xl font-bold text-blue-600 flex items-center gap-2"><Icons.Smartphone className="text-blue-600"/> Mobile POS</h1></div>
                         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                            {['pos', 'services', 'installments', 'stock', 'report', 'users'].map(tab => {
-                                if ((tab==='users' && !hasPermission('users')) || (!hasPermission(tab) && tab!=='users')) return null;
-                                return <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg capitalize ${activeTab === tab ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>{tab==='pos' && <Icons.CreditCard className="w-5 h-5"/>}{tab==='services' && <Icons.Wrench className="w-5 h-5"/>}{tab==='installments' && <Icons.User className="w-5 h-5"/>}{tab==='stock' && <Icons.Package className="w-5 h-5"/>}{tab==='report' && <Icons.BarChart3 className="w-5 h-5"/>}{tab==='users' && <Icons.Users className="w-5 h-5"/>} <span className="capitalize">{PERMISSION_LABELS[tab]}</span></button>
+                            {['pos', 'services', 'installments', 'stock', 'report', 'users', 'audit'].map(tab => {
+                                if ((tab==='users' && !hasPermission('users')) || (tab==='audit' && !hasPermission('audit')) || (!['users','audit'].includes(tab) && !hasPermission(tab))) return null;
+                                return <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg capitalize ${activeTab === tab ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>{tab==='pos' && <Icons.CreditCard className="w-5 h-5"/>}{tab==='services' && <Icons.Wrench className="w-5 h-5"/>}{tab==='installments' && <Icons.User className="w-5 h-5"/>}{tab==='stock' && <Icons.Package className="w-5 h-5"/>}{tab==='report' && <Icons.BarChart3 className="w-5 h-5"/>}{tab==='users' && <Icons.Users className="w-5 h-5"/>}{tab==='audit' && <Icons.History className="w-5 h-5"/>} <span className="capitalize">{PERMISSION_LABELS[tab]}</span></button>
                             })}
                         </nav>
                         <div className="p-4 border-t bg-slate-50 flex justify-between items-center"><div className="text-sm font-medium text-slate-700">{currentUser.name}</div><button onClick={handleLogout} className="text-red-500 hover:text-red-700 p-2"><Icons.LogOut className="w-5 h-5"/></button></div>
                         <div className="p-4 border-t bg-slate-50"><div className="text-xs font-bold text-gray-400 mb-2 uppercase">จัดการข้อมูล</div><div className="flex gap-2"><button onClick={handleExportData} className="flex-1 py-1.5 border rounded bg-white text-xs hover:bg-gray-50 flex justify-center items-center gap-1"><Icons.Download className="w-3 h-3"/> Backup</button><button onClick={()=>fileInputRef.current.click()} className="flex-1 py-1.5 border rounded bg-white text-xs hover:bg-gray-50 flex justify-center items-center gap-1"><Icons.Upload className="w-3 h-3"/> Restore</button><input type="file" ref={fileInputRef} className="hidden" onChange={handleImportData} accept=".json"/></div></div>
                     </aside>
                     <div className="md:hidden fixed top-0 w-full bg-white border-b z-50 px-4 py-3 flex justify-between items-center shadow-sm"><h1 className="font-bold text-blue-600 flex items-center gap-2"><Icons.Smartphone className="w-5 h-5"/> Mobile POS</h1><button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2"><Icons.Menu className="w-6 h-6"/></button></div>
-                    {isMobileMenuOpen && (<div className="md:hidden fixed inset-0 bg-white z-40 pt-16 px-4">{['pos','services','installments','stock','report', 'users'].map(t => hasPermission(t) ? <button key={t} onClick={() => {setActiveTab(t); setIsMobileMenuOpen(false)}} className="block w-full text-left p-4 border-b capitalize">{PERMISSION_LABELS[t]}</button> : null)}<button onClick={handleLogout} className="block w-full text-left p-4 border-b text-red-600">ออกจากระบบ</button><button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4"><Icons.X/></button></div>)}
+                    {isMobileMenuOpen && (<div className="md:hidden fixed inset-0 bg-white z-40 pt-16 px-4">{['pos','services','installments','stock','report', 'users', 'audit'].map(t => hasPermission(t) ? <button key={t} onClick={() => {setActiveTab(t); setIsMobileMenuOpen(false)}} className="block w-full text-left p-4 border-b capitalize">{PERMISSION_LABELS[t]}</button> : null)}<button onClick={handleLogout} className="block w-full text-left p-4 border-b text-red-600">ออกจากระบบ</button><button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4"><Icons.X/></button></div>)}
                     <main className="flex-1 pt-16 md:pt-0 overflow-y-auto relative bg-slate-50">
                         {activeTab === 'stock' && renderStockView()}
                         {activeTab === 'pos' && renderPOSView()}
@@ -1064,6 +1199,7 @@
                         {activeTab === 'installments' && renderInstallmentView()}
                         {activeTab === 'report' && renderReportView()}
                         {activeTab === 'users' && renderUsersView()}
+                        {activeTab === 'audit' && renderAuditLogView()}
                     </main>
 
                     {showCheckoutModal && <Modal title="ชำระเงิน" onClose={() => setShowCheckoutModal(false)}><div className="text-center py-6 text-4xl font-bold text-blue-600">฿{calculateCartTotal().toLocaleString()}</div><div className="space-y-2 mt-4"><label className="text-sm font-bold text-slate-700">ส่วนลดท้ายบิล</label><div className="flex gap-2"><input id="billDisc" type="number" className="p-2 border rounded flex-1" placeholder="บาท" /><input id="billReason" className="p-2 border rounded flex-1" placeholder="เหตุผล" /></div></div><Button onClick={() => handleCheckout(parseFloat(document.getElementById('billDisc').value)||0, document.getElementById('billReason').value)} className="w-full mt-4 py-3 text-lg">ยืนยัน</Button></Modal>}
