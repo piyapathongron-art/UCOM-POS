@@ -45,7 +45,6 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Smooth transition for mobile cart expansion */
         .cart-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 
         @media print {
@@ -67,7 +66,7 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- System Info ---
-        const APP_VERSION = "1.0.10";
+        const APP_VERSION = "1.0.11";
         const LAST_UPDATE = "22/12/2025";
 
         // --- Initial Data ---
@@ -648,6 +647,13 @@
                 if (newCart.length === 0) setIsCartExpanded(false);
             };
 
+            const removeFromCart = (idx) => {
+                const newCart = cart.filter((_, i) => i !== idx);
+                setCart(newCart);
+                if (newCart.length === 0) setIsCartExpanded(false);
+                showNotif('ลบรายการแล้ว');
+            };
+
             const openDiscountModal = (index) => {
                 const item = cart[index]; if (!item) return;
                 setDiscountModal({ show: true, index: index, amount: item.itemDiscount ? String(item.itemDiscount) : '', reason: item.itemDiscountReason || '' });
@@ -953,7 +959,7 @@
                         <div className="grid grid-cols-3 gap-3"><div><label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">จำนวน</label><input type="number" className="w-full p-2 border dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" placeholder="0" value={stockFormData.qty} onChange={e=>setStockFormData({...stockFormData, qty: e.target.value})}/></div><div><label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">ราคาทุน</label><input type="number" className="w-full p-2 border dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" placeholder="0.00" value={stockFormData.cost} onChange={e=>setStockFormData({...stockFormData, cost: e.target.value})}/></div><div><label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">ราคาขาย</label><input type="number" className="w-full p-2 border dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" placeholder="0.00" value={stockFormData.price} onChange={e=>setStockFormData({...stockFormData, price: e.target.value})}/></div></div>
                         <div className="flex gap-2 pt-4"><Button variant="secondary" className="flex-1" onClick={() => setStockEditId(null)}>ยกเลิก</Button><Button className="flex-1" onClick={handleStockSave}>บันทึก</Button></div>
                     </div></Card></div>)}
-                    {showCategoryModal && (<Modal title="จัดการหมวดหมู่" onClose={() => setShowCategoryModal(false)}><div className="space-y-2">{categories.map((cat, idx) => (<div key={idx} className="flex gap-2 items-center p-2 border dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-700/50">{editCatIndex === idx ? (<React.Fragment><input className="flex-1 p-1 border dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" value={editCatName} onChange={e => setEditCatName(e.target.value)} autoFocus /><button onClick={() => handleRenameCategory(idx)} className="text-green-600 p-1"><Icons.Check/></button><button onClick={() => setEditCatIndex(-1)} className="text-red-500 p-1"><Icons.X/></button></React.Fragment>) : (<React.Fragment><span className="flex-1 font-medium dark:text-slate-200">{cat}</span><button onClick={() => { setEditCatIndex(idx); setEditCatName(cat); }} className="text-blue-500 p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded"><Icons.Edit className="w-4 h-4"/></button>{cat !== 'ทั่วไป' && (<button onClick={() => handleDeleteCategory(idx)} className="text-red-500 p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"><Icons.Trash2 className="w-4 h-4"/></button>)}</React.Fragment>)}</div>))}<div className="mt-4 pt-4 border-t dark:border-slate-600"><form onSubmit={(e) => { e.preventDefault(); const val = e.target.newCat.value.trim(); if(val && !categories.includes(val)) { setCategories([...categories, val]); e.target.reset(); logAction('เพิ่มหมวดหมู่', `เพิ่มหมวดหมู่ใหม่: ${val}`); showNotif('เพิ่มหมวดหมู่แล้ว'); } }} className="flex gap-2"><input name="newCat" className="flex-1 p-2 border dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" placeholder="เพิ่มหมวดหมู่ใหม่..." /><Button type="submit" variant="primary"><Icons.Plus className="w-4 h-4"/></Button></form></div></div></Modal>)}
+                    {showCategoryModal && (<Modal title="จัดการหมวดหมู่" onClose={() => setShowCategoryModal(false)}><div className="space-y-2">{categories.map((cat, idx) => (<div key={idx} className="flex gap-2 items-center p-2 border dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-700/50">{editCatIndex === idx ? (<React.Fragment><input className="flex-1 p-1 border dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" value={editCatName} onChange={e => setEditCatName(e.target.value)} autoFocus /><button onClick={() => handleRenameCategory(idx)} className="text-green-600 p-1"><Icons.Check/></button><button onClick={() => setEditCatIndex(-1)} className="text-red-500 p-1"><Icons.X/></button></React.Fragment>) : (<React.Fragment><span className="flex-1 font-medium dark:text-slate-200">{cat}</span><button onClick={() => { setEditCatIndex(idx); setEditCatName(cat); }} className="text-blue-500 p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded"><Icons.Edit className="w-4 h-4"/></button>{cat !== 'ทั่วไป' && (<button onClick={() => handleDeleteCategory(idx)} className="text-red-500 p-1 hover:bg-red-100 dark:hover:bg-blue-900/30 rounded"><Icons.Trash2 className="w-4 h-4"/></button>)}</React.Fragment>)}</div>))}<div className="mt-4 pt-4 border-t dark:border-slate-600"><form onSubmit={(e) => { e.preventDefault(); const val = e.target.newCat.value.trim(); if(val && !categories.includes(val)) { setCategories([...categories, val]); e.target.reset(); logAction('เพิ่มหมวดหมู่', `เพิ่มหมวดหมู่ใหม่: ${val}`); showNotif('เพิ่มหมวดหมู่แล้ว'); } }} className="flex gap-2"><input name="newCat" className="flex-1 p-2 border dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" placeholder="เพิ่มหมวดหมู่ใหม่..." /><Button type="submit" variant="primary"><Icons.Plus className="w-4 h-4"/></Button></form></div></div></Modal>)}
                 </div>
             );
 
@@ -970,16 +976,16 @@
                     <div className="flex flex-col h-full lg:flex-row relative">
                         <div className="flex-1 p-4 overflow-y-auto pb-24 lg:pb-4">
                             <div className="flex gap-2 mb-4 sticky top-0 bg-slate-100 dark:bg-slate-900 pt-2 pb-2 z-10"><div className="relative flex-1"><span className="absolute left-3 top-2.5 text-gray-400"><Icons.Search className="w-4 h-4"/></span><input className="w-full pl-10 p-2 border dark:border-slate-600 rounded shadow-sm dark:bg-slate-800 dark:text-white" placeholder="ค้นหา..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} autoFocus /></div><div className="relative w-1/3 min-w-[120px]"><span className="absolute left-3 top-2.5 text-gray-500 pointer-events-none"><Icons.Filter className="w-4 h-4"/></span><input list="pos-cats" className="w-full pl-10 p-2 border dark:border-slate-600 rounded shadow-sm dark:bg-slate-800 dark:text-white" placeholder="หมวดหมู่" value={selectedCategory==='ทั้งหมด'?'':selectedCategory} onChange={e=>setSelectedCategory(e.target.value||'ทั้งหมด')} onFocus={e=>e.target.select()}/><datalist id="pos-cats"><option value="ทั้งหมด"/>{categories.map(c=><option key={c} value={c}/>)}</datalist></div></div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">{filtered.map(item => (<div key={item.id} onClick={()=>addToCart(item)} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm hover:shadow-md cursor-pointer border border-transparent dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all"><div className="flex justify-between items-start mb-2"><span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">{item.group}</span><span className={`text-[10px] px-2 py-0.5 rounded ${item.qty>0?'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300':'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'}`}>{item.qty>0?`เหลือ ${item.qty}`:'หมด'}</span></div><div className="font-semibold text-gray-800 dark:text-white line-clamp-1">{item.name}</div><div className="text-xs text-gray-400 font-mono mb-1">{item.productId}</div><div className="text-lg font-bold text-blue-600 dark:text-blue-400">฿{item.price.toLocaleString()}</div></div>))}</div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">{filtered.map(item => (<div key={item.id} onClick={()=>addToCart(item)} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm hover:shadow-md cursor-pointer border border-transparent dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all"><div className="flex justify-between items-start mb-2"><span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">{item.group}</span><span className={`text-[10px] px-2 py-0.5 rounded ${item.qty>0?'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300':'bg-red-100 dark:bg-green-900/30 text-red-700 dark:text-red-300'}`}>{item.qty>0?`เหลือ ${item.qty}`:'หมด'}</span></div><div className="font-semibold text-gray-800 dark:text-white line-clamp-1">{item.name}</div><div className="text-xs text-gray-400 font-mono mb-1">{item.productId}</div><div className="text-lg font-bold text-blue-600 dark:text-blue-400">฿{item.price.toLocaleString()}</div></div>))}</div>
                         </div>
 
-                        {/* Updated Floating/Sidebar Cart UI for Desktop Stability */}
+                        {/* Updated Sidebar/Floating Cart */}
                         <div className={`
                             fixed z-[45] cart-transition
                             lg:static lg:w-96 lg:h-full lg:flex lg:flex-col lg:bg-white lg:dark:bg-slate-800 lg:border-l lg:dark:border-slate-700 lg:shadow-none lg:p-0 lg:rounded-none lg:visible lg:opacity-100
                             ${isCartExpanded ? 'bottom-0 left-0 w-full h-[85vh] rounded-t-3xl shadow-2xl overflow-hidden flex flex-col bg-white dark:bg-slate-800 border-t dark:border-slate-700' : 'bottom-6 right-6 w-auto h-auto lg:h-full lg:w-96'}
                         `}>
-                            {/* Mobile Toggle / Floating Button */}
+                            {/* Header Toggle */}
                             <div 
                                 className={`
                                     cursor-pointer lg:cursor-default flex items-center p-3 select-none transition-all duration-300
@@ -997,7 +1003,6 @@
                                         <span className={`text-sm ${ (isCartExpanded || window.innerWidth >= 1024) ? 'text-slate-800 dark:text-white' : 'font-bold'}`}>
                                             {(isCartExpanded || window.innerWidth >= 1024) ? 'รายการในตะกร้า' : `฿${cartTotal.toLocaleString()}`}
                                         </span>
-                                        {!isCartExpanded && window.innerWidth < 1024 && <span className="text-[9px] opacity-80 font-medium">แตะเพื่อดูตะกร้า</span>}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1010,25 +1015,24 @@
                                 </div>
                             </div>
 
-                            {/* Cart List Content */}
+                            {/* Cart Items List */}
                             <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${!isCartExpanded && window.innerWidth < 1024 ? 'hidden' : 'block'}`}>
                                 {cart.length === 0 ? (
                                     <div className="h-full flex flex-col items-center justify-center text-slate-400 py-12 opacity-60">
-                                        <div className="bg-slate-100 dark:bg-slate-700/50 p-6 rounded-full mb-4">
-                                            <Icons.Package className="w-16 h-16" />
-                                        </div>
+                                        <div className="bg-slate-100 dark:bg-slate-700/50 p-6 rounded-full mb-4"><Icons.Package className="w-16 h-16" /></div>
                                         <p className="text-base font-medium">ยังไม่มีสินค้าในตะกร้า</p>
-                                        <p className="text-xs">เลือกสินค้าด้านซ้ายเพื่อเพิ่มรายการ</p>
                                     </div>
                                 ) : (
                                     cart.map((item,idx) => (
-                                        <div key={item.id || idx} className="bg-slate-50 dark:bg-slate-700/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-600/50 fade-in shadow-sm">
+                                        <div key={item.id || idx} className="bg-slate-50 dark:bg-slate-700/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-600/50 fade-in shadow-sm relative group">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div className="flex-1 pr-2">
                                                     <span className="font-bold text-sm dark:text-white leading-tight block">{item.name}</span>
                                                     <span className="text-[10px] text-slate-400 font-mono">{item.productId || 'SERVICE'}</span>
                                                 </div>
-                                                <span className="font-black dark:text-white text-base text-blue-600 dark:text-blue-400 whitespace-nowrap">฿{((item.price*item.qty)-(item.itemDiscount||0)).toLocaleString()}</span>
+                                                <div className="text-right">
+                                                    <span className="font-black dark:text-white text-base text-blue-600 dark:text-blue-400 whitespace-nowrap">฿{((item.price*item.qty)-(item.itemDiscount||0)).toLocaleString()}</span>
+                                                </div>
                                             </div>
                                             <div className="flex justify-between items-center mt-3">
                                                 <div className="flex items-center bg-white dark:bg-slate-600 rounded-xl p-1 shadow-sm border dark:border-slate-500">
@@ -1036,14 +1040,20 @@
                                                     <span className="w-8 text-center text-sm font-black dark:text-white">{item.qty}</span>
                                                     <button onClick={()=>updateCartQty(idx,1)} className="w-8 h-8 flex items-center justify-center text-blue-600 dark:text-blue-300 hover:text-blue-700 active:scale-75 transition-all text-xl">+</button>
                                                 </div>
-                                                <button onClick={()=>{openDiscountModal(idx)}} className="text-[11px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-3 py-1.5 rounded-lg font-bold border border-blue-100 dark:border-blue-900/50">ลดราคา</button>
+                                                <div className="flex gap-1">
+                                                    <button onClick={()=>{openDiscountModal(idx)}} className="text-[11px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-3 py-1.5 rounded-lg font-bold border border-blue-100 dark:border-blue-900/50">ลดราคา</button>
+                                                    {/* New Delete Button */}
+                                                    <button onClick={()=>removeFromCart(idx)} className="p-1.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100" title="ลบรายการ">
+                                                        <Icons.Trash2 className="w-4 h-4"/>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))
                                 )}
                             </div>
 
-                            {/* Summary Footer */}
+                            {/* Cart Footer */}
                             <div className={`p-5 border-t dark:border-slate-700 bg-white dark:bg-slate-800 rounded-b-3xl lg:rounded-none ${!isCartExpanded && window.innerWidth < 1024 ? 'hidden' : 'block'}`}>
                                 <div className="flex justify-between mb-5 items-end">
                                     <div className="flex flex-col">
@@ -1062,9 +1072,8 @@
                             </div>
                         </div>
                         
-                        {/* Overlay Backdrop for mobile - darker for better focus */}
                         {isCartExpanded && window.innerWidth < 1024 ? (
-                            <div className="fixed inset-0 bg-black/60 backdrop-blur-[3px] z-40 lg:hidden transition-opacity duration-300" onClick={() => setIsCartExpanded(false)}></div>
+                            <div className="fixed inset-0 bg-black/60 backdrop-blur-[3px] z-40 lg:hidden" onClick={() => setIsCartExpanded(false)}></div>
                         ) : null}
                     </div>
                 );
@@ -1101,7 +1110,6 @@
                     <div className={`grid gap-4 mb-8 ${showCostProfit ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2'}`}>
                         <div className="p-6 bg-blue-600 dark:bg-blue-800 rounded-xl text-white shadow-sm">
                             <div className="text-blue-100 dark:text-blue-200">ยอดขายรวม</div><div className="text-3xl font-bold">฿{reportSummary.sales.toLocaleString()}</div>
-                            <div className="text-xs mt-2 opacity-80 flex gap-2"><span>รวม: {reportSummary.sales.toLocaleString()}</span><span>|</span><span className="font-bold text-green-100">สด: {reportSummary.cashSales.toLocaleString()}</span><span>|</span><span className="font-bold text-blue-200">โอน: {reportSummary.transferSales.toLocaleString()}</span></div>
                         </div>
                         {showCostProfit && (<React.Fragment><div className="p-6 bg-orange-500 dark:bg-orange-700 rounded-xl text-white shadow-sm"><div className="text-orange-100">ยอดทุนรวม</div><div className="text-3xl font-bold">฿{reportSummary.cost.toLocaleString()}</div></div><div className="p-6 bg-green-600 dark:bg-green-800 rounded-xl text-white shadow-sm"><div className="text-green-100">กำไรสุทธิ</div><div className="text-3xl font-bold">฿{reportSummary.profit.toLocaleString()}</div></div></React.Fragment>)}
                         <Card className="p-6 bg-purple-600 dark:bg-purple-800 text-white border-none"><div className="text-purple-100">จำนวนบิล</div><div className="text-3xl font-bold">{reportSummary.count}</div></Card>
@@ -1120,21 +1128,18 @@
                     {showDailySummaryModal && (
                         <Modal title="สรุปยอดปิดร้าน (Daily Close)" onClose={() => setShowDailySummaryModal(false)} id="printable-area">
                             <div className="space-y-6">
-                                <div className="text-center border-b dark:border-slate-700 pb-4"><div className="text-2xl font-bold text-slate-800 dark:text-white">สรุปยอดประจำวัน</div><p className="text-slate-500 dark:text-slate-400 mt-1">วันที่ {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p><p className="text-xs text-slate-400 mt-1">พนักงาน: {currentUser.name}</p></div>
+                                <div className="text-center border-b dark:border-slate-700 pb-4"><div className="text-2xl font-bold text-slate-800 dark:text-white">สรุปยอดประจำวัน</div><p className="text-slate-500 dark:text-slate-400 mt-1">วันที่ {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
                                 <div className="space-y-3"><div className="flex justify-between items-center text-slate-700 dark:text-slate-200 font-bold text-lg"><span>ยอดขายทั้งหมด ({todayStats.count} บิล)</span><span>฿{todayStats.sales.toLocaleString()}</span></div><div className="flex gap-2"><div className="flex-1 border-l-4 border-green-500 bg-green-50 dark:bg-green-900/30 p-2 rounded"><div className="text-xs text-green-800 dark:text-green-300 font-bold">เงินสด</div><div className="font-bold text-green-700 dark:text-green-400 text-lg">฿{todayStats.cash.toLocaleString()}</div></div><div className="flex-1 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30 p-2 rounded"><div className="text-xs text-blue-800 dark:text-blue-300 font-bold">โอนเงิน</div><div className="font-bold text-blue-700 dark:text-blue-400 text-lg">฿{todayStats.transfer.toLocaleString()}</div></div></div>
                                     <div className="bg-white dark:bg-slate-700 border dark:border-slate-600 rounded-lg p-3 text-sm mt-2 print-border">
                                         <div className="font-bold text-slate-700 dark:text-slate-200 mb-2 border-b dark:border-slate-600 pb-1">รายละเอียดสินค้าที่ขาย</div>
-                                        <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
+                                        <div className="space-y-3 max-h-60 overflow-y-auto">
                                             {Object.keys(todayStats.itemBreakdown).length > 0 ? (
                                                 Object.entries(todayStats.itemBreakdown).map(([cat, items]) => (
                                                     <div key={cat}>
                                                         <div className="font-bold text-xs text-slate-500 dark:text-slate-400 mb-1">{cat}</div>
                                                         {Object.values(items).map((item, idx) => (
                                                             <div key={idx} className="flex justify-between text-slate-700 dark:text-slate-200 pl-2 mb-1">
-                                                                <div className="truncate pr-2 flex-1">
-                                                                    <span>{item.name}</span> 
-                                                                    <span className="text-xs text-slate-400 ml-1">x{item.qty} {item.productId ? `ID:${item.productId}` : ''}</span>
-                                                                </div>
+                                                                <div className="truncate pr-2 flex-1"><span>{item.name}</span><span className="text-xs text-slate-400 ml-1">x{item.qty}</span></div>
                                                                 <span className="font-medium whitespace-nowrap">฿{item.total.toLocaleString()}</span>
                                                             </div>
                                                         ))}
@@ -1147,13 +1152,13 @@
                                 <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border-2 border-dashed border-red-200 dark:border-red-900/50 print-border">
                                     <div className="flex justify-between items-center mb-2"><label className="block text-sm font-bold text-red-600 dark:text-red-400">หัก: รายจ่ายประจำวัน</label><span className="text-red-600 dark:text-red-400 font-bold">-฿{totalTodayExpenses.toLocaleString()}</span></div>
                                     <div className="flex gap-2 mb-3 no-print items-center">
-                                        <input type="text" className="flex-1 p-2 border dark:border-slate-600 rounded text-sm min-w-0 dark:bg-slate-800 dark:text-white" placeholder="รายการ (เช่น ซื้อน้ำแข็ง)" value={expenseForm.name} onChange={e => setExpenseForm({...expenseForm, name: e.target.value})} />
-                                        <input type="number" className="w-32 p-2 border dark:border-slate-600 rounded text-sm text-right dark:bg-slate-800 dark:text-white" placeholder="จำนวนเงิน" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} />
+                                        <input type="text" className="flex-1 p-2 border dark:border-slate-600 rounded text-sm min-w-0 dark:bg-slate-800 dark:text-white" placeholder="รายการรายจ่าย..." value={expenseForm.name} onChange={e => setExpenseForm({...expenseForm, name: e.target.value})} />
+                                        <input type="number" className="w-32 p-2 border dark:border-slate-600 rounded text-sm text-right dark:bg-slate-800 dark:text-white" placeholder="เงิน" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} />
                                         <button onClick={handleAddExpense} className="bg-red-500 text-white p-2 rounded hover:bg-red-600 shrink-0">{expenseEditId ? <Icons.Check className="w-4 h-4"/> : <Icons.Plus className="w-4 h-4"/>}</button>
                                     </div>
-                                    <div className="space-y-1">{todayExpenses.length > 0 ? (todayExpenses.map(ex => (<div key={ex.id} className="flex justify-between items-center text-sm bg-white dark:bg-slate-800 p-2 rounded border dark:border-slate-700 hover:shadow-sm group"><span className="text-slate-700 dark:text-slate-300">{ex.name}</span><div className="flex items-center gap-3"><span className="font-medium text-red-600 dark:text-red-400">-฿{ex.amount.toLocaleString()}</span><div className="flex gap-1 no-print opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => handleEditExpense(ex)} className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded"><Icons.Edit className="w-3 h-3"/></button><button onClick={() => handleDeleteExpense(ex.id)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1 rounded"><Icons.X className="w-3 h-3"/></button></div></div></div>))) : (<div className="text-xs text-slate-400 text-center py-2">ไม่มีรายจ่ายวันนี้</div>)}</div>
+                                    <div className="space-y-1">{todayExpenses.map(ex => (<div key={ex.id} className="flex justify-between items-center text-sm bg-white dark:bg-slate-800 p-2 rounded border dark:border-slate-700 hover:shadow-sm group"><span className="text-slate-700 dark:text-slate-300">{ex.name}</span><div className="flex items-center gap-3"><span className="font-medium text-red-600 dark:text-red-400">-฿{ex.amount.toLocaleString()}</span><div className="flex gap-1 no-print opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => handleEditExpense(ex)} className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded"><Icons.Edit className="w-3 h-3"/></button><button onClick={() => handleDeleteExpense(ex.id)} className="text-red-500 hover:bg-red-50 dark:hover:bg-blue-900/30 p-1 rounded"><Icons.X className="w-3 h-3"/></button></div></div></div>))}</div>
                                 </div>
-                                <div className="space-y-2 pt-4 border-t-2 border-slate-800 dark:border-slate-600"><div className="flex justify-between items-center"><span className="font-bold text-lg dark:text-white">เงินสดสุทธิ (ส่งเจ้าของ)</span><span className="font-bold text-3xl text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 rounded">฿{(todayStats.cash - totalTodayExpenses).toLocaleString()}</span></div><div className="text-xs text-right text-slate-400">(ยอดขายเงินสด - รายจ่ายรวม)</div><div className="flex justify-between items-center mt-2 pt-2 border-t dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400"><span>เงินโอน (เข้าบัญชี)</span><span className="font-bold text-blue-600 dark:text-blue-400">฿{todayStats.transfer.toLocaleString()}</span></div></div>
+                                <div className="space-y-2 pt-4 border-t-2 border-slate-800 dark:border-slate-600"><div className="flex justify-between items-center"><span className="font-bold text-lg dark:text-white">เงินสดสุทธิ (ส่งเจ้าของ)</span><span className="font-bold text-3xl text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 rounded">฿{(todayStats.cash - totalTodayExpenses).toLocaleString()}</span></div></div>
                                 <div className="pt-6 flex gap-2 no-print"><Button variant="secondary" className="flex-1" onClick={() => setShowDailySummaryModal(false)}>ปิด</Button><Button className="flex-1 bg-slate-800 hover:bg-slate-900 text-white" onClick={() => window.print()}><Icons.Printer className="w-4 h-4" /> พิมพ์ใบสรุป</Button></div>
                             </div>
                         </Modal>
@@ -1175,21 +1180,14 @@
                         </nav>
                         <div className="p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                                <button onClick={toggleTheme} className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="เปลี่ยนธีม">
-                                    {isDarkMode ? <Icons.Sun className="w-4 h-4"/> : <Icons.Moon className="w-4 h-4"/>}
-                                </button>
+                                <button onClick={toggleTheme} className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400" title="เปลี่ยนธีม">{isDarkMode ? <Icons.Sun className="w-4 h-4"/> : <Icons.Moon className="w-4 h-4"/>}</button>
                                 <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{currentUser.name}</div>
                             </div>
                             <button onClick={handleLogout} className="text-red-500 hover:text-red-700 dark:hover:text-red-400 p-2"><Icons.LogOut className="w-5 h-5"/></button>
                         </div>
-                        <div className="p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50"><div className="text-xs font-bold text-gray-400 mb-2 uppercase">จัดการข้อมูล</div><div className="flex gap-2"><button onClick={handleExportData} className="flex-1 py-1.5 border dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-xs hover:bg-gray-50 dark:hover:bg-slate-600 flex justify-center items-center gap-1 dark:text-white"><Icons.Download className="w-3 h-3"/> Backup</button><button onClick={()=>fileInputRef.current.click()} className="flex-1 py-1.5 border dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-xs hover:bg-gray-50 dark:hover:bg-slate-600 flex justify-center items-center gap-1 dark:text-white"><Icons.Upload className="w-3 h-3"/> Restore</button><input type="file" ref={fileInputRef} className="hidden" onChange={handleImportData} accept=".json"/></div></div>
                     </aside>
                     <div className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-800 border-b dark:border-slate-700 z-50 px-4 py-3 flex justify-between items-center shadow-sm"><h1 className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2"><Icons.Smartphone className="w-5 h-5"/> Mobile POS</h1><button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-700 dark:text-white"><Icons.Menu className="w-6 h-6"/></button></div>
                     {isMobileMenuOpen && (<div className="md:hidden fixed inset-0 bg-white dark:bg-slate-800 z-40 pt-16 px-4">{['pos','services','installments','stock','report', 'users', 'audit'].map(t => hasPermission(t) ? <button key={t} onClick={() => {setActiveTab(t); setIsMobileMenuOpen(false)}} className="block w-full text-left p-4 border-b dark:border-slate-700 capitalize text-slate-800 dark:text-white">{PERMISSION_LABELS[t]}</button> : null)}
-                        <div className="flex justify-between items-center p-4 border-b dark:border-slate-700">
-                            <span className="text-slate-800 dark:text-white">เปลี่ยนธีม</span>
-                            <button onClick={toggleTheme} className="p-2 bg-slate-100 dark:bg-slate-700 rounded-full">{isDarkMode ? <Icons.Sun/> : <Icons.Moon/>}</button>
-                        </div>
                         <button onClick={handleLogout} className="block w-full text-left p-4 border-b dark:border-slate-700 text-red-600 dark:text-red-400">ออกจากระบบ</button><button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 text-slate-800 dark:text-white"><Icons.X/></button></div>)}
                     <main className="flex-1 pt-16 md:pt-0 overflow-y-auto relative bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
                         {activeTab === 'stock' && renderStockView()}
@@ -1205,246 +1203,46 @@
                         <Modal title="ชำระเงิน" onClose={() => setShowCheckoutModal(false)}>
                             {checkoutStep === 'select' ? (
                                 <React.Fragment>
-                                    <div className="text-center py-5 bg-slate-50 dark:bg-slate-850 border dark:border-slate-700 rounded-xl mb-6 shadow-inner">
+                                    <div className="text-center py-5 bg-slate-50 dark:bg-slate-850 border dark:border-slate-700 rounded-xl mb-6">
                                         <div className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">ยอดรวมที่ต้องชำระ</div>
-                                        <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 drop-shadow-sm">฿{calculateCartTotal().toLocaleString()}</div>
-                                        
-                                        {parseNum(checkoutForm.discount) > 0 && (
-                                            <div className="mt-3 pt-3 border-t dark:border-slate-700 mx-6 fade-in">
-                                                <div className="flex justify-between text-xs text-slate-400 mb-1">
-                                                    <span>หักส่วนลด</span>
-                                                    <span className="text-red-500 font-bold">-฿{parseNum(checkoutForm.discount).toLocaleString()}</span>
-                                                </div>
-                                                <div className="flex justify-between text-sm font-bold text-green-600 dark:text-green-400">
-                                                    <span>ยอดสุทธิคงเหลือ</span>
-                                                    <span>฿{Math.max(0, calculateCartTotal() - parseNum(checkoutForm.discount)).toLocaleString()}</span>
-                                                </div>
-                                            </div>
-                                        )}
+                                        <div className="text-4xl font-bold text-blue-600 dark:text-blue-400">฿{calculateCartTotal().toLocaleString()}</div>
                                     </div>
                                     <div className="space-y-5">
-                                        <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
-                                            <label className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2 block">ส่วนลดท้ายบิล (Bill Discount)</label>
+                                        <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border dark:border-blue-900/30">
+                                            <label className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 block uppercase">ส่วนลดท้ายบิล</label>
                                             <div className="flex flex-col gap-3">
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-3 text-slate-400 font-bold">฿</span>
-                                                    <input 
-                                                        type="number" 
-                                                        className={`w-full pl-8 p-3 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold ${parseNum(checkoutForm.discount) > calculateCartTotal() ? 'border-red-500 text-red-500' : 'dark:border-slate-600'}`}
-                                                        placeholder="0.00" 
-                                                        value={checkoutForm.discount}
-                                                        onChange={e => setCheckoutForm({...checkoutForm, discount: e.target.value})}
-                                                    />
-                                                    {parseNum(checkoutForm.discount) > calculateCartTotal() && (
-                                                        <div className="text-[10px] text-red-500 mt-1 font-bold italic">** ส่วนลดเกินราคาสินค้า</div>
-                                                    )}
-                                                </div>
-                                                <input 
-                                                    className="p-3 border dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
-                                                    placeholder="ระบุเหตุผลที่ลดราคา (ถ้ามี)"
-                                                    value={checkoutForm.reason}
-                                                    onChange={e => setCheckoutForm({...checkoutForm, reason: e.target.value})}
-                                                />
+                                                <input type="number" className="w-full p-3 border rounded-lg dark:bg-slate-700 dark:text-white dark:border-slate-600" placeholder="ระบุส่วนลดเงินสด..." value={checkoutForm.discount} onChange={e => setCheckoutForm({...checkoutForm, discount: e.target.value})} />
+                                                <input className="p-3 border dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" placeholder="ระบุเหตุผล (ถ้ามี)" value={checkoutForm.reason} onChange={e => setCheckoutForm({...checkoutForm, reason: e.target.value})} />
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4 pt-2">
-                                            <Button 
-                                                className="py-4 text-lg bg-green-600 hover:bg-green-700 flex flex-col gap-1 h-auto rounded-xl shadow-lg shadow-green-200 dark:shadow-none"
-                                                onClick={() => handleCheckout('cash', checkoutForm)}
-                                            >
-                                                <Icons.CreditCard className="w-6 h-6" />
-                                                <span className="font-bold">เงินสด</span>
-                                            </Button>
-                                            <Button 
-                                                className="py-4 text-lg bg-blue-600 hover:bg-blue-700 flex flex-col gap-1 h-auto rounded-xl shadow-lg shadow-blue-200 dark:shadow-none"
-                                                onClick={() => setCheckoutStep('transfer')}
-                                            >
-                                                <Icons.QrCode className="w-6 h-6" />
-                                                <span className="font-bold">โอนเงิน</span>
-                                            </Button>
+                                            <Button className="py-4 text-lg bg-green-600 flex flex-col gap-1 h-auto" onClick={() => handleCheckout('cash', checkoutForm)}><Icons.CreditCard/><span className="font-bold">เงินสด</span></Button>
+                                            <Button className="py-4 text-lg bg-blue-600 flex flex-col gap-1 h-auto" onClick={() => setCheckoutStep('transfer')}><Icons.QrCode/><span className="font-bold">โอนเงิน</span></Button>
                                         </div>
                                     </div>
                                 </React.Fragment>
                             ) : (
                                 <React.Fragment>
-                                    <div className="text-center mb-4">
-                                        <div className="text-lg font-bold text-slate-800 dark:text-white">ข้อมูลสำหรับการโอนเงิน</div>
-                                        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 my-2">
-                                            ฿{(Math.max(0, calculateCartTotal() - (parseNum(checkoutForm.discount)))).toLocaleString()}
-                                        </div>
-                                        {parseNum(checkoutForm.discount) > 0 && (
-                                            <div className="text-xs text-red-500 font-bold">(ลดไปแล้ว ฿{parseNum(checkoutForm.discount).toLocaleString()})</div>
-                                        )}
-                                    </div>
-                                    
-                                    <div className="bg-slate-50 dark:bg-slate-700 p-6 border rounded-lg mb-4 flex flex-col items-center shadow-inner">
-                                        <div className="text-sm dark:text-slate-300 mb-2 font-medium">ยอดเงินที่ต้องเข้าบัญชี</div>
+                                    <div className="text-center mb-4"><div className="text-lg font-bold dark:text-white">โอนเงิน</div><div className="text-3xl font-bold text-blue-600 dark:text-blue-400 my-2">฿{(Math.max(0, calculateCartTotal() - (parseNum(checkoutForm.discount)))).toLocaleString()}</div></div>
+                                    <div className="bg-slate-50 dark:bg-slate-700 p-6 border rounded-lg mb-4 flex flex-col items-center">
                                         <div className="w-full space-y-2">
-                                            <div className="flex justify-between p-2 border-b dark:border-slate-600">
-                                                <span className="text-slate-500">ธนาคาร</span>
-                                                <span className="font-bold dark:text-white">กสิกรไทย</span>
-                                            </div>
-                                            <div className="flex justify-between p-2">
-                                                <span className="text-slate-500">เลขบัญชี</span>
-                                                <span className="font-bold dark:text-white">xxx-x-xxxxx-x</span>
-                                            </div>
+                                            <div className="flex justify-between p-2 border-b dark:border-slate-600"><span className="text-slate-500">ธนาคาร</span><span className="font-bold dark:text-white">กสิกรไทย</span></div>
+                                            <div className="flex justify-between p-2"><span className="text-slate-500">เลขบัญชี</span><span className="font-bold dark:text-white">xxx-x-xxxxx-x</span></div>
                                         </div>
                                     </div>
-
-                                    <div className="space-y-3">
-                                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl text-xs text-center border border-blue-100 dark:border-blue-900/30">
-                                            เมื่อลูกค้าโอนเงินสำเร็จและตรวจสอบยอดแล้ว <br/> กรุณากดปุ่ม **"ยืนยันยอดเงินเข้า"** เพื่อปิดการขาย
-                                        </div>
-
-                                        <div className="flex gap-2 pt-2">
-                                            <Button variant="secondary" className="flex-1 rounded-lg" onClick={() => setCheckoutStep('select')}>ย้อนกลับ</Button>
-                                            <Button 
-                                                className="flex-[2] rounded-lg shadow-lg" 
-                                                onClick={() => handleCheckout('transfer', checkoutForm)}
-                                            >
-                                                ยืนยันยอดเงินเข้า
-                                            </Button>
-                                        </div>
-                                    </div>
+                                    <div className="flex gap-2 pt-2"><Button variant="secondary" className="flex-1" onClick={() => setCheckoutStep('select')}>ย้อนกลับ</Button><Button className="flex-[2]" onClick={() => handleCheckout('transfer', checkoutForm)}>ยืนยันยอดเงินเข้า</Button></div>
                                 </React.Fragment>
                             )}
                         </Modal>
                     )}
 
-                    {discountModal.show && <Modal title="ส่วนลดรายชิ้น" onClose={() => setDiscountModal({...discountModal, show: false})}><input type="number" className="w-full border dark:border-slate-600 dark:bg-slate-700 dark:text-white p-3 mb-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" value={discountModal.amount} onChange={e => setDiscountModal({...discountModal, amount: e.target.value})} placeholder="จำนวนเงินส่วนลด" /><input className="w-full border dark:border-slate-600 dark:bg-slate-700 dark:text-white p-3 mb-5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" value={discountModal.reason} onChange={e => setDiscountModal({...discountModal, reason: e.target.value})} placeholder="เหตุผลการลดราคา" /><Button onClick={saveDiscount} className="w-full py-3 rounded-lg">บันทึกส่วนลด</Button></Modal>}
-                    
-                    {saleDetailModal.show && saleDetailModal.sale && (
-                        <Modal title="รายละเอียดบิลการขาย" onClose={() => setSaleDetailModal({ show: false, sale: null })}>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-start border-b dark:border-slate-700 pb-4">
-                                    <div>
-                                        <div className="text-sm text-slate-500 dark:text-slate-400">เลขที่บิล</div>
-                                        <div className="font-mono font-bold text-slate-700 dark:text-slate-200">{saleDetailModal.sale.id}</div>
-                                        <div className="flex gap-2 mt-1">
-                                            <span className={`text-xs px-2 py-0.5 rounded ${saleDetailModal.sale.paymentMethod === 'transfer' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'}`}>
-                                                {saleDetailModal.sale.paymentMethod === 'transfer' ? 'โอนเงิน' : 'เงินสด'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="text-right"><div className="text-sm text-slate-500 dark:text-slate-400">วันที่</div><div className="font-medium dark:text-slate-200">{new Date(saleDetailModal.sale.date).toLocaleString('th-TH')}</div></div>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3"><table className="w-full text-sm"><thead><tr className="text-slate-500 dark:text-slate-400 border-b dark:border-slate-600"><th className="text-left pb-2">รายการ</th><th className="text-center pb-2">จำนวน</th><th className="text-right pb-2">รวม</th></tr></thead><tbody>{saleDetailModal.sale.items.map((item, idx) => (<tr key={idx} className="border-b dark:border-slate-600 last:border-0 border-slate-100"><td className="py-2"><div className="font-medium dark:text-slate-200">{item.name}</div><div className="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap gap-2 mt-1">
-                                    {currentUser.role !== 'staff' && <span>ทุน: {(item.cost || 0).toLocaleString()} | </span>}
-                                    <span>ขาย: {item.price.toLocaleString()}</span></div>{item.itemDiscount > 0 && (<div className="text-xs text-red-500 dark:text-red-400">ส่วนลด: -{item.itemDiscount.toLocaleString()} ({item.itemDiscountReason})</div>)}
-                                    {currentUser.role !== 'staff' && <div className="text-xs text-green-600 dark:text-green-400 font-medium mt-1">กำไร: +{(( (item.price - (item.cost || 0)) * item.qty ) - (item.itemDiscount || 0)).toLocaleString()}</div>}
-                                    </td><td className="py-2 text-center align-top text-slate-600 dark:text-slate-300">x{item.qty}</td><td className="py-2 text-right align-top font-medium dark:text-slate-200">{((item.price * item.qty) - (item.itemDiscount || 0)).toLocaleString()}</td></tr>))}</tbody></table></div>
-                                <div className="space-y-2 pt-2">
-                                    {currentUser.role !== 'staff' && (
-                                        <div className="flex justify-between text-orange-500 dark:text-orange-400 text-xs"><span>ยอดรวมต้นทุน</span><span>{saleDetailModal.sale.items.reduce((acc, item) => acc + ((item.cost || 0) * item.qty), 0).toLocaleString()}</span></div>
-                                    )}
-                                    <div className="flex justify-between text-slate-600 dark:text-slate-300"><span>ยอดรวมสินค้า (ขาย)</span><span>{saleDetailModal.sale.subtotal.toLocaleString()}</span></div>{saleDetailModal.sale.billDiscount > 0 && (<div className="flex justify-between text-red-600 dark:text-red-400"><span>ส่วนลดท้ายบิล ({saleDetailModal.sale.billDiscountReason})</span><span>-{saleDetailModal.sale.billDiscount.toLocaleString()}</span></div>)}<div className="flex justify-between text-xl font-bold text-blue-600 dark:text-blue-400 border-t dark:border-slate-600 pt-2"><span>ยอดสุทธิ</span><span>฿{saleDetailModal.sale.total.toLocaleString()}</span></div>
-                                    {currentUser.role !== 'staff' && (
-                                        <div className="flex justify-between text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-2 rounded"><span>กำไรจากบิลนี้</span><span>+฿{saleDetailModal.sale.profit.toLocaleString()}</span></div>
-                                    )}
-                                </div>
-                                <div className="pt-4 flex gap-2"><Button variant="outline" className="flex-1" onClick={() => setSaleDetailModal({ show: false, sale: null })}>ปิด</Button><Button className="flex-1" onClick={() => window.print()}><Icons.Printer className="w-4 h-4"/> พิมพ์</Button></div>
-                            </div>
-                        </Modal>
-                    )}
-                    
-                    {selectedDailyDetail && (
-                        <Modal title={`รายละเอียดวันที่ ${selectedDailyDetail.date}`} onClose={() => setSelectedDailyDetail(null)} maxWidth="max-w-2xl">
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-100 dark:border-blue-900/50">
-                                        <div className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase">ยอดขายรวม</div>
-                                        <div className="text-lg font-bold dark:text-white">{selectedDailyDetail.sales.toLocaleString()}</div>
-                                    </div>
-                                    <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded border border-purple-100 dark:border-purple-900/50">
-                                        <div className="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase">จำนวนบิล</div>
-                                        <div className="text-lg font-bold dark:text-white">{selectedDailyDetail.count}</div>
-                                    </div>
-                                    {currentUser.role !== 'staff' && (
-                                        <>
-                                        <div className="p-3 bg-orange-50 dark:bg-orange-900/30 rounded border border-orange-100 dark:border-orange-900/50">
-                                            <div className="text-xs text-orange-600 dark:text-orange-400 font-bold uppercase">ทุนรวม</div>
-                                            <div className="text-lg font-bold dark:text-white">{selectedDailyDetail.cost.toLocaleString()}</div>
-                                        </div>
-                                        <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded border border-green-100 dark:border-green-900/50">
-                                            <div className="text-xs text-green-600 dark:text-green-400 font-bold uppercase">กำไรสุทธิ</div>
-                                            <div className="text-lg font-bold dark:text-white">{selectedDailyDetail.profit.toLocaleString()}</div>
-                                        </div>
-                                        </>
-                                    )}
-                                </div>
-
-                                <div className="border dark:border-slate-700 rounded-lg overflow-hidden">
-                                    <div className="bg-slate-100 dark:bg-slate-700 p-2 font-bold text-sm text-slate-700 dark:text-white">สรุปตามหมวดหมู่</div>
-                                    <table className="w-full text-sm">
-                                        <tbody className="divide-y dark:divide-slate-700">
-                                            {Object.entries(selectedDailyDetail.categorySummary).map(([cat, total], i) => (
-                                                <tr key={i} className="">
-                                                    <td className="p-2 pl-4 dark:text-slate-300">{cat}</td>
-                                                    <td className="p-2 pr-4 text-right font-medium dark:text-slate-200">{total.toLocaleString()}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <div className="border dark:border-slate-700 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
-                                    <div className="bg-slate-100 dark:bg-slate-700 p-2 font-bold text-sm text-slate-700 dark:text-white sticky top-0">รายการบิลทั้งหมด</div>
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="border-b dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400">
-                                                <th className="p-2 text-left">เวลา</th>
-                                                <th className="p-2 text-left">รายการ</th>
-                                                <th className="p-2 text-right">ยอดเงิน</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y dark:divide-slate-700">
-                                            {selectedDailyDetail.transactions.map((t, i) => (
-                                                <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer" onClick={() => setSaleDetailModal({ show: true, sale: t })}>
-                                                    <td className="p-2 text-slate-500 dark:text-slate-400 w-16">{new Date(t.date).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</td>
-                                                    <td className="p-2">
-                                                        <div className="line-clamp-1 dark:text-slate-200">{t.items.map(item => item.name).join(', ')}</div>
-                                                        <div className="text-xs text-slate-400 flex gap-2">
-                                                            <span>ID: {t.id}</span>
-                                                            <span className={t.paymentMethod === 'transfer' ? 'text-blue-500 dark:text-blue-400' : 'text-green-500 dark:text-green-400'}>
-                                                                ({t.paymentMethod === 'transfer' ? 'โอน' : 'สด'})
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-2 text-right font-medium dark:text-slate-200">{t.total.toLocaleString()}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </Modal>
-                    )}
-
-                    {exportModalOpen && (
-                        <Modal title="ตั้งค่าการ Export CSV" onClose={() => setExportModalOpen(false)}>
-                            <div className="space-y-4">
-                                <div className="text-sm text-slate-500 dark:text-slate-400 mb-2">เลือกคอลัมน์ที่ต้องการแสดงในไฟล์ CSV:</div>
-                                <div className="space-y-2">
-                                    {exportSettings.columns.map(col => (
-                                        <label key={col.id} className="flex items-center gap-3 p-3 border dark:border-slate-600 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                            <input 
-                                                type="checkbox" 
-                                                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                                checked={exportSettings.selected.includes(col.id)} 
-                                                onChange={() => toggleExportColumn(col.id)} 
-                                            />
-                                            <span className="font-medium text-slate-700 dark:text-slate-200">{col.header}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                                <div className="flex gap-2 pt-4">
-                                    <Button variant="secondary" className="flex-1" onClick={() => setExportModalOpen(false)}>ยกเลิก</Button>
-                                    <Button variant="success" className="flex-1" onClick={confirmExport}>ดาวน์โหลด CSV</Button>
-                                </div>
-                            </div>
-                        </Modal>
-                    )}
-
+                    {discountModal.show && <Modal title="ส่วนลดรายชิ้น" onClose={() => setDiscountModal({...discountModal, show: false})}><input type="number" className="w-full border dark:border-slate-600 dark:bg-slate-700 dark:text-white p-3 mb-3 rounded-lg outline-none" value={discountModal.amount} onChange={e => setDiscountModal({...discountModal, amount: e.target.value})} placeholder="จำนวนเงินส่วนลด" /><input className="w-full border dark:border-slate-600 dark:bg-slate-700 dark:text-white p-3 mb-5 rounded-lg outline-none" value={discountModal.reason} onChange={e => setDiscountModal({...discountModal, reason: e.target.value})} placeholder="เหตุผลการลดราคา" /><Button onClick={saveDiscount} className="w-full py-3 rounded-lg">บันทึกส่วนลด</Button></Modal>}
+                    {saleDetailModal.show && saleDetailModal.sale && (<Modal title="บิลการขาย" onClose={() => setSaleDetailModal({ show: false, sale: null })}><div className="space-y-4">
+                        <div className="flex justify-between border-b dark:border-slate-700 pb-2"><div><div className="text-xs text-slate-500">เลขบิล</div><div className="font-mono font-bold dark:text-white">{saleDetailModal.sale.id}</div></div><div className="text-right text-xs text-slate-500">{new Date(saleDetailModal.sale.date).toLocaleString('th-TH')}</div></div>
+                        <div className="space-y-2">{saleDetailModal.sale.items.map((item, idx) => (<div key={idx} className="flex justify-between text-sm"><div className="flex-1 pr-2"><div className="dark:text-white font-medium">{item.name}</div><div className="text-[10px] text-slate-400">x{item.qty} {item.itemDiscount > 0 ? `(ลด ${item.itemDiscount})` : ''}</div></div><div className="font-bold dark:text-white">฿{((item.price * item.qty) - (item.itemDiscount || 0)).toLocaleString()}</div></div>))}</div>
+                        <div className="border-t dark:border-slate-700 pt-2 space-y-1"><div className="flex justify-between text-sm text-slate-500"><span>รวม</span><span>฿{saleDetailModal.sale.subtotal.toLocaleString()}</span></div>{saleDetailModal.sale.billDiscount > 0 && <div className="flex justify-between text-sm text-red-500"><span>ส่วนลดท้ายบิล</span><span>-฿{saleDetailModal.sale.billDiscount.toLocaleString()}</span></div>}<div className="flex justify-between text-xl font-bold text-blue-600 dark:text-blue-400"><span>สุทธิ</span><span>฿{saleDetailModal.sale.total.toLocaleString()}</span></div></div>
+                        <Button className="w-full" onClick={() => window.print()}><Icons.Printer className="w-4 h-4"/> พิมพ์</Button>
+                    </div></Modal>)}
                     {notification && <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}
                     {confirmData && <ConfirmModal title={confirmData.title} message={confirmData.message} onConfirm={confirmData.onConfirm} onCancel={() => setConfirmData(null)} />}
                 </div>
