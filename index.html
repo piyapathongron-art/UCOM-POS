@@ -67,7 +67,7 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- System Info ---
-        const APP_VERSION = "1.0.8";
+        const APP_VERSION = "1.0.9";
         const LAST_UPDATE = "22/12/2025";
 
         // --- Initial Data ---
@@ -287,7 +287,7 @@
             const [checkoutForm, setCheckoutForm] = useState({ discount: '', reason: '' });
 
             const [repairData, setRepairData] = useState({ name: '', cost: '', price: '' });
-            const [topupData, setTopupData] = useState({ number: '', amount: '' });
+            const [topupData, setTopupData] = useState({ carrier: 'True', amount: '' });
             const [installmentViewMode, setInstallmentViewMode] = useState('list');
             const [extForm, setExtForm] = useState({ shop: '', model: '', price: '', cost: '', mode: 'commission', commission: '' });
             
@@ -575,11 +575,11 @@
             };
 
             const handleAddTopup = () => {
-                const num = topupData.number.trim(); const amt = parseNum(topupData.amount);
-                if (!num || amt <= 0) return showNotif('กรุณากรอกข้อมูล', 'error');
+                const carrier = topupData.carrier; const amt = parseNum(topupData.amount);
+                if (!amt || amt <= 0) return showNotif('กรุณาระบุยอดเงิน', 'error');
                 const cost = amt - (amt * 0.03);
-                addToCart({ id: Date.now(), name: `[เติมเงิน] ${num}`, price: amt, cost, qty: 1 }, 'service');
-                setTopupData({number:'', amount:''}); showNotif('เพิ่มรายการเติมเงินแล้ว');
+                addToCart({ id: Date.now(), name: `[เติมเงิน] ${carrier}`, price: amt, cost, qty: 1, group: 'เติมเงิน' }, 'service');
+                setTopupData({carrier: 'True', amount:''}); showNotif('เพิ่มรายการเติมเงินแล้ว');
             };
             
             const generateID = () => {
@@ -638,7 +638,6 @@
                 if (existingIndex !== -1) { const newCart = [...cart]; newCart[existingIndex] = { ...newCart[existingIndex], qty: newCart[existingIndex].qty + 1 }; setCart(newCart); }
                 else { setCart([...cart, { ...item, type, qty: 1, itemDiscount: 0, itemDiscountReason: '', ...custom }]); }
                 showNotif('เพิ่มลงตะกร้า');
-                // Don't auto-expand anymore to respect user space, but keep state updated
             };
 
             const updateCartQty = (idx, delta) => {
@@ -873,10 +872,35 @@
 
                         <Card className="p-6">
                             <div className="flex items-center gap-2 mb-6 text-green-600 dark:text-green-400 font-bold text-xl"><Icons.Wifi /> บริการเติมเงิน</div>
-                            <div className="space-y-4">
-                                <input placeholder="เบอร์โทร" className="w-full p-3 border dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={topupData.number} onChange={e => setTopupData({...topupData, number: e.target.value})} />
-                                <input type="number" className="w-full p-3 border dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" placeholder="ยอดเงิน" value={topupData.amount} onChange={e => setTopupData({...topupData, amount: e.target.value})} />
-                                <Button onClick={handleAddTopup} className="w-full bg-green-600 hover:bg-green-700">เติมเงิน</Button>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-500 mb-3 dark:text-slate-400">เลือกค่ายมือถือ:</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['True', 'Dtac', 'Ais'].map(c => (
+                                            <button 
+                                                key={c}
+                                                onClick={() => setTopupData({...topupData, carrier: c})}
+                                                className={`py-3 rounded-xl font-bold transition-all border-2 ${topupData.carrier === c 
+                                                    ? (c === 'True' ? 'bg-red-600 text-white border-red-600 shadow-lg shadow-red-200' : c === 'Dtac' ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-200' : 'bg-green-600 text-white border-green-600 shadow-lg shadow-green-200')
+                                                    : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                {c}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-3.5 text-slate-400 font-bold">฿</span>
+                                    <input 
+                                        type="number" 
+                                        className="w-full pl-8 p-3 border dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white font-bold text-xl" 
+                                        placeholder="ระบุยอดเงินเติม" 
+                                        value={topupData.amount} 
+                                        onChange={e => setTopupData({...topupData, amount: e.target.value})} 
+                                    />
+                                </div>
+                                <Button onClick={handleAddTopup} className="w-full bg-green-600 hover:bg-green-700 text-lg py-3">เพิ่มลงรายการขาย</Button>
                             </div>
                         </Card>
                     </div>
