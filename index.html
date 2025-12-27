@@ -66,8 +66,8 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- System Info ---
-        const APP_VERSION = "1.1.2";
-        const LAST_UPDATE = "24/12/2025";
+        const APP_VERSION = "1.1.4";
+        const LAST_UPDATE = "27/12/2025";
 
         // --- Initial Data ---
         const INITIAL_STOCK = [
@@ -85,7 +85,7 @@
 
         const PERMISSION_LABELS = {
             'pos': 'ขายหน้าร้าน', 'services': 'บริการ', 'installments': 'ฝากผ่อน',
-            'stock': 'จัดการสต็อก', 'report': 'รายงาน', 'users': 'จัดการผู้ใช้', 'audit': 'ประวัติการใช้งาน'
+            'stock': 'จัดการสต็อก', 'report': 'รายงาน', 'users': 'จัดการผู้ใช้', 'audit': 'ประวัติการใช้งาน', 'settings': 'ตั้งค่าระบบ'
         };
 
         // --- Helper Functions ---
@@ -377,6 +377,75 @@
                     user: userOverride ? userOverride : (currentUser ? currentUser.username : 'Unknown')
                 };
                 setAuditLogs(prev => [newLog, ...prev]);
+            };
+
+            // --- Backup & Restore Logic ---
+            const handleBackupData = () => {
+                const data = {
+                    version: APP_VERSION,
+                    timestamp: new Date().toISOString(),
+                    inventory,
+                    salesLog,
+                    partners,
+                    categories,
+                    users,
+                    auditLogs,
+                    expenseList,
+                    repairQueue
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `US_POS_Backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                logAction('สำรองข้อมูล', 'ส่งออกข้อมูลระบบเป็นไฟล์ JSON');
+                showNotif('สำรองข้อมูลสำเร็จ');
+            };
+
+            const handleRestoreData = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        
+                        // Check if it looks like our backup
+                        if (!importedData.inventory || !importedData.salesLog) {
+                            throw new Error('รูปแบบไฟล์ไม่ถูกต้อง');
+                        }
+
+                        confirmAction(
+                            'ยืนยันการกู้คืนข้อมูล', 
+                            'การกู้คืนจะเขียนทับข้อมูลปัจจุบันทั้งหมดในเครื่องนี้ ยืนยันที่จะดำเนินการหรือไม่?', 
+                            () => {
+                                if(importedData.inventory) setInventory(importedData.inventory);
+                                if(importedData.salesLog) setSalesLog(importedData.salesLog);
+                                if(importedData.partners) setPartners(importedData.partners);
+                                if(importedData.categories) setCategories(importedData.categories);
+                                if(importedData.users) setUsers(importedData.users);
+                                if(importedData.auditLogs) setAuditLogs(importedData.auditLogs);
+                                if(importedData.expenseList) setExpenseList(importedData.expenseList);
+                                if(importedData.repairQueue) setRepairQueue(importedData.repairQueue);
+
+                                logAction('กู้คืนข้อมูล', `กู้คืนข้อมูลจากไฟล์สำรองวันที่ ${new Date(importedData.timestamp).toLocaleString()}`);
+                                showNotif('กู้คืนข้อมูลสำเร็จ ระบบจะเริ่มใช้งานด้วยข้อมูลใหม่');
+                            }
+                        );
+                    } catch (err) {
+                        showNotif('เกิดข้อผิดพลาด: ' + err.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+                // Reset input
+                event.target.value = '';
             };
 
             const stockFiltered = useMemo(() => {
@@ -766,14 +835,91 @@
                 const element = document.getElementById('daily-summary-content');
                 const dateStr = new Date().toISOString().split('T')[0];
                 const opt = { margin: 10, filename: `Daily_Summary_${dateStr}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+                
                 const originalStyle = element.style.cssText;
                 element.style.color = '#000'; 
-                html2pdf().set(opt).from(element).save().then(() => { element.style.cssText = originalStyle; });
+                
+                // Perform PDF Export
+                html2pdf().set(opt).from(element).save().then(() => { 
+                    element.style.cssText = originalStyle; 
+                    
+                    // Simultaneously perform Backup download
+                    handleBackupData();
+                });
             };
 
             if (!currentUser) return <LoginScreen onLogin={handleLogin} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />;
 
             // --- VIEW RENDER FUNCTIONS ---
+            const renderSettingsView = () => (
+                <div className="max-w-4xl mx-auto p-6 space-y-6">
+                    <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-2xl font-bold dark:text-white">ตั้งค่าระบบและจัดการข้อมูล</h2>
+                    </div>
+                    
+                    <Card className="p-6 border-l-4 border-l-blue-500">
+                        <h3 className="font-bold text-lg mb-4 dark:text-white flex items-center gap-2">
+                            <Icons.Database className="text-blue-500" /> สำรองและกู้คืนข้อมูล (Backup & Restore)
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                            คุณสามารถดาวน์โหลดข้อมูลทั้งหมดของร้านเก็บไว้เป็นไฟล์เพื่อป้องกันข้อมูลสูญหาย หรือเพื่อย้ายข้อมูลไปยังเครื่องอื่น
+                        </p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border dark:border-slate-600 flex flex-col items-center text-center">
+                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-3 text-blue-600 dark:text-blue-400">
+                                    <Icons.Download />
+                                </div>
+                                <h4 className="font-bold mb-1 dark:text-white">ส่งออกข้อมูล (Backup)</h4>
+                                <p className="text-xs text-slate-400 mb-4">บันทึกข้อมูลเป็นไฟล์ลงในเครื่องนี้</p>
+                                <Button onClick={handleBackupData} className="w-full">ดาวน์โหลดไฟล์สำรอง</Button>
+                            </div>
+                            
+                            <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border dark:border-slate-600 flex flex-col items-center text-center">
+                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-3 text-orange-600 dark:text-orange-400">
+                                    <Icons.Upload />
+                                </div>
+                                <h4 className="font-bold mb-1 dark:text-white">นำเข้าข้อมูล (Restore)</h4>
+                                <p className="text-xs text-slate-400 mb-4">ใช้ไฟล์ที่สำรองไว้กู้คืนข้อมูลระบบ</p>
+                                <label className="w-full">
+                                    <input 
+                                        type="file" 
+                                        accept=".json" 
+                                        className="hidden" 
+                                        onChange={handleRestoreData}
+                                    />
+                                    <div className="w-full py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors cursor-pointer text-center">
+                                        เลือกไฟล์และกู้คืน
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card className="p-6">
+                        <h3 className="font-bold text-lg mb-4 dark:text-white">ข้อมูลเครื่องที่ใช้งาน</h3>
+                        <div className="space-y-3 text-sm">
+                            <div className="flex justify-between py-2 border-b dark:border-slate-700">
+                                <span className="text-slate-500">เวอร์ชันระบบ</span>
+                                <span className="font-mono font-bold dark:text-slate-300">{APP_VERSION}</span>
+                            </div>
+                            <div className="flex justify-between py-2 border-b dark:border-slate-700">
+                                <span className="text-slate-500">อัปเดตล่าสุด</span>
+                                <span className="font-bold dark:text-slate-300">{LAST_UPDATE}</span>
+                            </div>
+                            <div className="flex justify-between py-2 border-b dark:border-slate-700">
+                                <span className="text-slate-500">จำนวนรายการขายในเครื่อง</span>
+                                <span className="font-bold dark:text-slate-300">{salesLog.length} บิล</span>
+                            </div>
+                            <div className="flex justify-between py-2">
+                                <span className="text-slate-500">ขนาดฐานข้อมูล (ประมาณ)</span>
+                                <span className="font-bold dark:text-slate-300">{(new Blob([localStorage.getItem('pos_sales') || '']).size / 1024).toFixed(2)} KB</span>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+
             const renderUsersView = () => (
                 <div className="max-w-4xl mx-auto p-6">
                     <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold dark:text-white">จัดการผู้ใช้</h2><Button onClick={() => { setUserForm({ permissions: [] }); setUserModal(true); }}><Icons.Plus className="w-4 h-4 mr-1"/> เพิ่มผู้ใช้</Button></div><div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden"><table className="w-full text-left"><thead className="bg-slate-50 dark:bg-slate-700 border-b dark:border-slate-700"><tr><th className="p-4 dark:text-slate-300">ชื่อ</th><th className="p-4 dark:text-slate-300">Username</th><th className="p-4 dark:text-slate-300">Role</th><th className="p-4 dark:text-slate-300">จัดการ</th></tr></thead><tbody className="divide-y dark:divide-slate-700">{users.map(u => (<tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-4 dark:text-slate-300">{u.name}</td><td className="p-4 font-mono text-slate-500 dark:text-slate-400">{u.username}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs ${u.role==='admin'?'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300':'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`}>{u.role}</span></td><td className="p-4 flex gap-2"><button onClick={() => { setUserForm(u); setUserModal(true); }} className="text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/50 p-2 rounded"><Icons.Edit className="w-4 h-4"/></button>{u.username !== 'admin' && <button onClick={() => confirmAction('ลบผู้ใช้', `ยืนยันลบ ${u.name}?`, () => { setUsers(users.filter(user => user.id !== u.id)); logAction('ลบผู้ใช้', `ลบผู้ใช้: ${u.username}`); })} className="text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/50 p-2 rounded"><Icons.Trash2 className="w-4 h-4"/></button>}</td></tr>))}</tbody></table></div>
@@ -1115,7 +1261,7 @@
                         </div>
                     </div>
 
-                    {/* 2. Transaction List (Moved Up) */}
+                    {/* 2. Transaction List */}
                     <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border dark:border-slate-700 overflow-hidden">
                         <div className="p-5 border-b dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                             <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
@@ -1190,7 +1336,7 @@
                         </div>
                     </div>
 
-                    {/* 3. Rankings Insight Section (Moved Down) */}
+                    {/* 3. Rankings Insight Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <Card className="p-6 overflow-hidden">
                             <div className="flex justify-between items-center mb-6">
@@ -1256,7 +1402,7 @@
                     </div>
 
                     {/* Daily Summary Modal */}
-                    {showDailySummaryModal && (<Modal title="สรุปยอดปิดร้าน (Daily Close)" onClose={() => setShowDailySummaryModal(false)}><div className="space-y-6"><div id="daily-summary-content" className="bg-white dark:bg-slate-800 p-4 rounded-xl"><div className="text-center border-b dark:border-slate-700 pb-4"><div className="text-2xl font-bold text-slate-800 dark:text-white">สรุปยอดประจำวัน</div><p className="text-slate-500 dark:text-slate-400 mt-1">วันที่ {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p></div><div className="space-y-3 mt-4"><div className="flex justify-between items-center text-slate-700 dark:text-slate-200 font-bold text-lg"><span>ยอดขายทั้งหมด ({todayStats.count} บิล)</span><span>฿{todayStats.sales.toLocaleString()}</span></div><div className="flex gap-2"><div className="flex-1 border-l-4 border-green-500 bg-green-50 dark:bg-green-900/30 p-2 rounded"><div className="text-xs text-green-800 dark:text-green-300 font-bold">เงินสด</div><div className="font-bold text-green-700 dark:text-green-400 text-lg">฿{todayStats.cash.toLocaleString()}</div></div><div className="flex-1 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30 p-2 rounded"><div className="text-xs text-blue-800 dark:text-blue-300 font-bold">โอนเงิน</div><div className="font-bold text-blue-700 dark:text-blue-400 text-lg">฿{todayStats.transfer.toLocaleString()}</div></div></div><div className="bg-white dark:bg-slate-700 border dark:border-slate-600 rounded-lg p-3 text-sm mt-2 print-border"><div className="font-bold text-slate-700 dark:text-slate-200 mb-2 border-b dark:border-slate-600 pb-1">รายละเอียดสินค้าที่ขาย</div><div className="space-y-3 max-h-60 overflow-y-auto">{Object.keys(todayStats.itemBreakdown).length > 0 ? (Object.entries(todayStats.itemBreakdown).sort((a, b) => b[1].maxItemPrice - a[1].maxItemPrice).map(([cat, categoryData]) => (<div key={cat}><div className="font-bold text-xs text-slate-500 dark:text-slate-400 mb-1">{cat}</div>{Object.values(categoryData.items).map((item, idx) => (<div key={idx} className="flex justify-between text-slate-700 dark:text-slate-200 pl-2 mb-1"><div className="truncate pr-2 flex-1"><span className="text-[10px] text-slate-400 font-mono mr-1">[{item.productId || 'N/A'}]</span><span>{item.name}</span><span className="text-xs text-slate-400 ml-1">x{item.qty}</span></div><span className="font-medium whitespace-nowrap">฿{item.total.toLocaleString()}</span></div>))}</div>))) : (<div className="text-slate-400 italic text-xs text-center">ไม่มีรายการขายในวันนี้</div>)}</div></div></div><div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border-2 border-dashed border-red-200 dark:border-red-900/50 print-border mt-4"><div className="flex justify-between items-center mb-2"><label className="block text-sm font-bold text-red-600 dark:text-red-400">หัก: รายจ่ายประจำวัน</label><span className="text-red-600 dark:text-red-400 font-bold">-฿{totalTodayExpenses.toLocaleString()}</span></div><div className="space-y-1">{todayExpenses.map(ex => (<div key={ex.id} className="flex justify-between items-center text-sm bg-white dark:bg-slate-800 p-2 rounded border dark:border-slate-700 group relative"><span className="text-slate-700 dark:text-slate-300 pr-2 truncate flex-1">{ex.name}</span><div className="flex items-center gap-3"><span className="font-bold text-red-600 dark:text-red-400 whitespace-nowrap">-฿{ex.amount.toLocaleString()}</span><div className="flex gap-1 no-print"><button onClick={() => handleEditExpense(ex)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="แก้ไข"><Icons.Edit className="w-3.5 h-3.5" /></button><button onClick={() => handleDeleteExpense(ex.id)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="ลบ"><Icons.Trash2 className="w-3.5 h-3.5" /></button></div></div></div>))}{todayExpenses.length === 0 && <div className="text-center text-xs text-slate-400 italic py-1">ไม่มีรายจ่ายวันนี้</div>}</div></div><div className="space-y-2 pt-4 border-t-2 border-slate-800 dark:border-slate-600 mt-4"><div className="flex justify-between items-center"><span className="font-bold text-lg dark:text-white">เงินสดสุทธิ (ส่งเจ้าของ)</span><span className="font-bold text-3xl text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 rounded">฿{(todayStats.cash - totalTodayExpenses).toLocaleString()}</span></div></div></div><div className={`p-4 rounded-xl no-print transition-all ${expenseEditId ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-400' : 'bg-slate-100 dark:bg-slate-850'}`}><div className="flex justify-between items-center mb-3"><label className="block text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{expenseEditId ? '🚩 แก้ไขรายการรายจ่าย' : 'เพิ่มรายจ่ายใหม่'}</label>{expenseEditId && (<button onClick={() => { setExpenseEditId(null); setExpenseForm({name:'', amount:''}); }} className="text-xs text-blue-600 font-bold hover:underline">ยกเลิกแก้ไข</button>)}</div><div className="flex gap-2 items-center"><input type="text" className="flex-1 p-2 border dark:border-slate-600 rounded text-sm min-w-0 dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" placeholder="รายการรายจ่าย..." value={expenseForm.name} onChange={e => setExpenseForm({...expenseForm, name: e.target.value})} /><input type="number" className="w-24 p-2 border dark:border-slate-600 rounded text-sm text-right dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" placeholder="บาท" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} /><button onClick={handleAddExpense} className={`p-2 rounded shrink-0 transition-colors ${expenseEditId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-500 hover:bg-red-600'} text-white`}>{expenseEditId ? <Icons.Check className="w-5 h-5"/> : <Icons.Plus className="w-5 h-5"/>}</button></div></div><div className="pt-6 flex flex-col md:flex-row gap-2 no-print"><Button variant="secondary" className="flex-1" onClick={() => setShowDailySummaryModal(false)}>ปิดหน้าต่าง</Button><Button className="flex-1 bg-slate-800 hover:bg-slate-900 text-white" onClick={() => window.print()}><Icons.Printer className="w-4 h-4" /> พิมพ์ (Direct)</Button><Button className="flex-1 bg-red-600 hover:bg-red-700 text-white" onClick={handleExportDailyPDF}><Icons.Download className="w-4 h-4" /> ส่งออก PDF</Button></div></div></Modal>)}
+                    {showDailySummaryModal && (<Modal title="สรุปยอดปิดร้าน (Daily Close)" onClose={() => setShowDailySummaryModal(false)}><div className="space-y-6"><div id="daily-summary-content" className="bg-white dark:bg-slate-800 p-4 rounded-xl"><div className="text-center border-b dark:border-slate-700 pb-4"><div className="text-2xl font-bold text-slate-800 dark:text-white">สรุปยอดประจำวัน</div><p className="text-slate-500 dark:text-slate-400 mt-1">วันที่ {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p></div><div className="space-y-3 mt-4"><div className="flex justify-between items-center text-slate-700 dark:text-slate-200 font-bold text-lg"><span>ยอดขายทั้งหมด ({todayStats.count} บิล)</span><span>฿{todayStats.sales.toLocaleString()}</span></div><div className="flex gap-2"><div className="flex-1 border-l-4 border-green-500 bg-green-50 dark:bg-green-900/30 p-2 rounded"><div className="text-xs text-green-800 dark:text-green-300 font-bold">เงินสด</div><div className="font-bold text-green-700 dark:text-green-400 text-lg">฿{todayStats.cash.toLocaleString()}</div></div><div className="flex-1 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30 p-2 rounded"><div className="text-xs text-blue-800 dark:text-blue-300 font-bold">โอนเงิน</div><div className="font-bold text-blue-700 dark:text-blue-400 text-lg">฿{todayStats.transfer.toLocaleString()}</div></div></div><div className="bg-white dark:bg-slate-700 border dark:border-slate-600 rounded-lg p-3 text-sm mt-2 print-border"><div className="font-bold text-slate-700 dark:text-slate-200 mb-2 border-b dark:border-slate-600 pb-1">รายละเอียดสินค้าที่ขาย</div><div className="space-y-3 max-h-60 overflow-y-auto">{Object.keys(todayStats.itemBreakdown).length > 0 ? (Object.entries(todayStats.itemBreakdown).sort((a, b) => b[1].maxItemPrice - a[1].maxItemPrice).map(([cat, categoryData]) => (<div key={cat}><div className="font-bold text-xs text-slate-500 dark:text-slate-400 mb-1">{cat}</div>{Object.values(categoryData.items).map((item, idx) => (<div key={idx} className="flex justify-between text-slate-700 dark:text-slate-200 pl-2 mb-1"><div className="truncate pr-2 flex-1"><span className="text-[10px] text-slate-400 font-mono mr-1">[{item.productId || 'N/A'}]</span><span>{item.name}</span><span className="text-xs text-slate-400 ml-1">x{item.qty}</span></div><span className="font-medium whitespace-nowrap">฿{item.total.toLocaleString()}</span></div>))}</div>))) : (<div className="text-slate-400 italic text-xs text-center">ไม่มีรายการขายในวันนี้</div>)}</div></div></div><div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border-2 border-dashed border-red-200 dark:border-red-900/50 print-border mt-4"><div className="flex justify-between items-center mb-2"><label className="block text-sm font-bold text-red-600 dark:text-red-400">หัก: รายจ่ายประจำวัน</label><span className="text-red-600 dark:text-red-400 font-bold">-฿{totalTodayExpenses.toLocaleString()}</span></div><div className="space-y-1">{todayExpenses.map(ex => (<div key={ex.id} className="flex justify-between items-center text-sm bg-white dark:bg-slate-800 p-2 rounded border dark:border-slate-700 group relative"><span className="text-slate-700 dark:text-slate-300 pr-2 truncate flex-1">{ex.name}</span><div className="flex items-center gap-3"><span className="font-bold text-red-600 dark:text-red-400 whitespace-nowrap">-฿{ex.amount.toLocaleString()}</span><div className="flex gap-1 no-print"><button onClick={() => handleEditExpense(ex)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="แก้ไข"><Icons.Edit className="w-3.5 h-3.5" /></button><button onClick={() => handleDeleteExpense(ex.id)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="ลบ"><Icons.Trash2 className="w-3.5 h-3.5" /></button></div></div></div>))}{todayExpenses.length === 0 && <div className="text-center text-xs text-slate-400 italic py-1">ไม่มีรายจ่ายวันนี้</div>}</div></div><div className="space-y-2 pt-4 border-t-2 border-slate-800 dark:border-slate-600 mt-4"><div className="flex justify-between items-center"><span className="font-bold text-lg dark:text-white">เงินสดสุทธิ (ส่งเจ้าของ)</span><span className="font-bold text-3xl text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 rounded">฿{(todayStats.cash - totalTodayExpenses).toLocaleString()}</span></div></div></div><div className={`p-4 rounded-xl no-print transition-all ${expenseEditId ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-400' : 'bg-slate-100 dark:bg-slate-850'}`}><div className="flex justify-between items-center mb-3"><label className="block text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{expenseEditId ? '🚩 แก้ไขรายการรายจ่าย' : 'เพิ่มรายจ่ายใหม่'}</label>{expenseEditId && (<button onClick={() => { setExpenseEditId(null); setExpenseForm({name:'', amount:''}); }} className="text-xs text-blue-600 font-bold hover:underline">ยกเลิกแก้ไข</button>)}</div><div className="flex gap-2 items-center"><input type="text" className="flex-1 p-2 border dark:border-slate-600 rounded text-sm min-w-0 dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" placeholder="รายการรายจ่าย..." value={expenseForm.name} onChange={e => setExpenseForm({...expenseForm, name: e.target.value})} /><input type="number" className="w-24 p-2 border dark:border-slate-600 rounded text-sm text-right dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" placeholder="บาท" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} /><button onClick={handleAddExpense} className={`p-2 rounded shrink-0 transition-colors ${expenseEditId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-500 hover:bg-red-600'} text-white`}>{expenseEditId ? <Icons.Check className="w-5 h-5"/> : <Icons.Plus className="w-5 h-5"/>}</button></div></div><div className="pt-6 flex flex-col md:flex-row gap-2 no-print"><Button variant="secondary" className="flex-1" onClick={() => setShowDailySummaryModal(false)}>ปิดหน้าต่าง</Button><Button className="flex-1 bg-slate-800 hover:bg-slate-900 text-white" onClick={() => window.print()}><Icons.Printer className="w-4 h-4" /> พิมพ์ (Direct)</Button><Button className="flex-1 bg-red-600 hover:bg-red-700 text-white" onClick={handleExportDailyPDF}><Icons.Download className="w-4 h-4" /> ส่งออก PDF + Backup</Button></div></div></Modal>)}
                 </div>
                 );
             };
@@ -1267,15 +1413,25 @@
                     <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r dark:border-slate-700 shadow-sm z-20">
                         <div className="p-6 border-b dark:border-slate-700"><h1 className="text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2"><Icons.Smartphone className="text-blue-600 dark:text-blue-400"/> Mobile POS</h1></div>
                         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                            {['pos', 'services', 'installments', 'stock', 'report', 'users', 'audit'].map(tab => {
-                                if ((tab==='users' && !hasPermission('users')) || (tab==='audit' && !hasPermission('audit')) || (!['users','audit'].includes(tab) && !hasPermission(tab))) return null;
-                                return <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg capitalize ${activeTab === tab ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50'}`}>{tab==='pos' && <Icons.CreditCard className="w-5 h-5"/>}{tab==='services' && <Icons.Wrench className="w-5 h-5"/>}{tab==='installments' && <Icons.User className="w-5 h-5"/>}{tab==='stock' && <Icons.Package className="w-5 h-5"/>}{tab==='report' && <Icons.BarChart3 className="w-5 h-5"/>}{tab==='users' && <Icons.Users className="w-5 h-5"/>}{tab==='audit' && <Icons.History className="w-5 h-5"/>} <span className="capitalize">{PERMISSION_LABELS[tab]}</span></button>
+                            {['pos', 'services', 'installments', 'stock', 'report', 'users', 'audit', 'settings'].map(tab => {
+                                if ((tab==='users' && !hasPermission('users')) || (tab==='audit' && !hasPermission('audit')) || (tab==='settings' && !hasPermission('settings')) || (!['users','audit','settings'].includes(tab) && !hasPermission(tab))) return null;
+                                return <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg capitalize ${activeTab === tab ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50'}`}>
+                                    {tab==='pos' && <Icons.CreditCard className="w-5 h-5"/>}
+                                    {tab==='services' && <Icons.Wrench className="w-5 h-5"/>}
+                                    {tab==='installments' && <Icons.User className="w-5 h-5"/>}
+                                    {tab==='stock' && <Icons.Package className="w-5 h-5"/>}
+                                    {tab==='report' && <Icons.BarChart3 className="w-5 h-5"/>}
+                                    {tab==='users' && <Icons.Users className="w-5 h-5"/>}
+                                    {tab==='audit' && <Icons.History className="w-5 h-5"/>}
+                                    {tab==='settings' && <Icons.Settings className="w-5 h-5"/>}
+                                    <span className="capitalize">{PERMISSION_LABELS[tab]}</span>
+                                </button>
                             })}
                         </nav>
                         <div className="p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center"><div className="flex items-center gap-2"><button onClick={toggleTheme} className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400" title="เปลี่ยนธีม">{isDarkMode ? <Icons.Sun className="w-4 h-4"/> : <Icons.Moon className="w-4 h-4"/>}</button><div className="text-sm font-medium text-slate-700 dark:text-slate-200">{currentUser.name}</div></div><button onClick={handleLogout} className="text-red-500 hover:text-red-700 dark:hover:text-red-400 p-2"><Icons.LogOut className="w-5 h-5"/></button></div>
                     </aside>
                     <div className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-800 border-b dark:border-slate-700 z-50 px-4 py-3 flex justify-between items-center shadow-sm"><h1 className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2"><Icons.Smartphone className="w-5 h-5"/> Mobile POS</h1><button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-700 dark:text-white"><Icons.Menu className="w-6 h-6"/></button></div>
-                    {isMobileMenuOpen && (<div className="md:hidden fixed inset-0 bg-white dark:bg-slate-800 z-40 pt-16 px-4">{['pos','services','installments','stock','report', 'users', 'audit'].map(t => hasPermission(t) ? <button key={t} onClick={() => {setActiveTab(t); setIsMobileMenuOpen(false)}} className="block w-full text-left p-4 border-b dark:border-slate-700 capitalize text-slate-800 dark:text-white">{PERMISSION_LABELS[t]}</button> : null)}<button onClick={handleLogout} className="block w-full text-left p-4 border-b dark:border-slate-700 text-red-600 dark:text-red-400">ออกจากระบบ</button><button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 text-slate-800 dark:text-white"><Icons.X/></button></div>)}
+                    {isMobileMenuOpen && (<div className="md:hidden inset-0 fixed bg-white dark:bg-slate-800 z-40 pt-16 px-4">{['pos','services','installments','stock','report', 'users', 'audit', 'settings'].map(t => hasPermission(t) ? <button key={t} onClick={() => {setActiveTab(t); setIsMobileMenuOpen(false)}} className="block w-full text-left p-4 border-b dark:border-slate-700 capitalize text-slate-800 dark:text-white">{PERMISSION_LABELS[t]}</button> : null)}<button onClick={handleLogout} className="block w-full text-left p-4 border-b dark:border-slate-700 text-red-600 dark:text-red-400">ออกจากระบบ</button><button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 text-slate-800 dark:text-white"><Icons.X/></button></div>)}
                     <main className="flex-1 pt-16 md:pt-0 overflow-y-auto relative bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
                         {activeTab === 'stock' && renderStockView()}
                         {activeTab === 'pos' && renderPOSView()}
@@ -1284,6 +1440,7 @@
                         {activeTab === 'report' && renderReportView()}
                         {activeTab === 'users' && renderUsersView()}
                         {activeTab === 'audit' && renderAuditLogView()}
+                        {activeTab === 'settings' && renderSettingsView()}
                     </main>
                     {showCheckoutModal && (<Modal title="ชำระเงิน" onClose={() => setShowCheckoutModal(false)}>{checkoutStep === 'select' ? (<React.Fragment><div className="text-center py-5 bg-slate-50 dark:bg-slate-850 border dark:border-slate-700 rounded-xl mb-6"><div className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">ยอดรวมที่ต้องชำระ</div><div className="text-4xl font-bold text-blue-600 dark:text-blue-400">฿{calculateCartTotal().toLocaleString()}</div></div><div className="space-y-5"><div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border dark:border-blue-900/30"><label className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 block uppercase">ส่วนลดท้ายบิล</label><div className="flex flex-col gap-3"><input type="number" className="w-full p-3 border rounded-lg dark:bg-slate-700 dark:text-white dark:border-slate-600" placeholder="ระบุส่วนลดเงินสด..." value={checkoutForm.discount} onChange={e => setCheckoutForm({...checkoutForm, discount: e.target.value})} /><input className="p-3 border dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" placeholder="ระบุเหตุผล (ถ้ามี)" value={checkoutForm.reason} onChange={e => setCheckoutForm({...checkoutForm, reason: e.target.value})} /></div></div><div className="grid grid-cols-2 gap-4 pt-2"><Button className="py-4 text-lg bg-green-600 flex flex-col gap-1 h-auto" onClick={() => handleCheckout('cash', checkoutForm)}><Icons.CreditCard/><span className="font-bold">เงินสด</span></Button><Button className="py-4 text-lg bg-blue-600 flex flex-col gap-1 h-auto" onClick={() => setCheckoutStep('transfer')}><Icons.QrCode/><span className="font-bold">โอนเงิน</span></Button></div></div></React.Fragment>) : (<React.Fragment><div className="text-center mb-4"><div className="text-lg font-bold dark:text-white">โอนเงิน</div><div className="text-3xl font-bold text-blue-600 dark:text-blue-400 my-2">฿{(Math.max(0, calculateCartTotal() - (parseNum(checkoutForm.discount)))).toLocaleString()}</div></div><div className="bg-slate-50 dark:bg-slate-700 p-6 border rounded-lg mb-4 flex flex-col items-center"><div className="w-full space-y-2"><div className="flex justify-between p-2 border-b dark:border-slate-600"><span className="text-slate-500">ธนาคาร</span><span className="font-bold dark:text-white">กสิกรไทย</span></div><div className="flex justify-between p-2"><span className="text-slate-500">เลขบัญชี</span><span className="font-bold dark:text-white">xxx-x-xxxxx-x</span></div></div></div><div className="flex gap-2 pt-2"><Button variant="secondary" className="flex-1" onClick={() => setCheckoutStep('select')}>ย้อนกลับ</Button><Button className="flex-[2]" onClick={() => handleCheckout('transfer', checkoutForm)}>ยืนยันยอดเงินเข้า</Button></div></React.Fragment>)}</Modal>)}
                     {discountModal.show && <Modal title="ส่วนลดรายชิ้น" onClose={() => setDiscountModal({...discountModal, show: false})}><input type="number" className="w-full border dark:border-slate-600 dark:bg-slate-700 dark:text-white p-3 mb-3 rounded-lg outline-none" value={discountModal.amount} onChange={e => setDiscountModal({...discountModal, amount: e.target.value})} placeholder="จำนวนเงินส่วนลด" /><input className="w-full border dark:border-slate-600 dark:bg-slate-700 dark:text-white p-3 mb-5 rounded-lg outline-none" value={discountModal.reason} onChange={e => setDiscountModal({...discountModal, reason: e.target.value})} placeholder="เหตุผลการลดราคา" /><Button onClick={saveDiscount} className="w-full py-3 rounded-lg">บันทึกส่วนลด</Button></Modal>}
